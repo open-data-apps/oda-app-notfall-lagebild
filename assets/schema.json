@@ -1,0 +1,142 @@
+{
+  "profile": "tabular-data-resource",
+  "name": "notfall-lagebild",
+  "title": "Notfall-Lagebild",
+  "description": "Standortdaten kommunaler Notfall-Infrastruktur fuer ein operatives Lagebild.",
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "title": "Eindeutige Kennung",
+        "type": "string",
+        "constraints": {
+          "required": true
+        }
+      },
+      {
+        "name": "name",
+        "title": "Anzeigename",
+        "type": "string",
+        "constraints": {
+          "required": true
+        }
+      },
+      {
+        "name": "typ",
+        "title": "Hauptkategorie",
+        "type": "string",
+        "constraints": {
+          "required": true
+        }
+      },
+      {
+        "name": "untertyp",
+        "title": "Feinerer Typ",
+        "type": "string"
+      },
+      {
+        "name": "status",
+        "title": "Betriebszustand",
+        "type": "string",
+        "constraints": {
+          "enum": ["aktiv", "eingeschraenkt", "ausser Betrieb", "geplant"]
+        }
+      },
+      {
+        "name": "kapazitaet_max",
+        "title": "Gesamtkapazitaet",
+        "type": "integer"
+      },
+      {
+        "name": "kapazitaet_verfuegbar",
+        "title": "Freie Kapazitaet",
+        "type": "integer"
+      },
+      {
+        "name": "auslastung_prozent",
+        "title": "Auslastung in Prozent",
+        "type": "integer"
+      },
+      {
+        "name": "strasse",
+        "title": "Strasse und Hausnummer",
+        "type": "string"
+      },
+      {
+        "name": "plz",
+        "title": "Postleitzahl",
+        "type": "string"
+      },
+      {
+        "name": "ort",
+        "title": "Ort",
+        "type": "string"
+      },
+      {
+        "name": "stadtteil",
+        "title": "Stadtteil oder Bezirk",
+        "type": "string"
+      },
+      {
+        "name": "lat",
+        "title": "Breitengrad",
+        "type": "number"
+      },
+      {
+        "name": "lon",
+        "title": "Laengengrad",
+        "type": "number"
+      },
+      {
+        "name": "barrierefrei",
+        "title": "Barrierefrei",
+        "type": "boolean"
+      },
+      {
+        "name": "stromversorgung_notstrom",
+        "title": "Notstrom vorhanden",
+        "type": "boolean"
+      },
+      {
+        "name": "wasser_verfuegbar",
+        "title": "Wasser verfuegbar",
+        "type": "boolean"
+      },
+      {
+        "name": "sanitaer_verfuegbar",
+        "title": "Sanitaer verfuegbar",
+        "type": "boolean"
+      },
+      {
+        "name": "betreiber",
+        "title": "Betreiber oder Zustaendigkeit",
+        "type": "string"
+      },
+      {
+        "name": "ansprechpartner",
+        "title": "Ansprechstelle",
+        "type": "string"
+      },
+      {
+        "name": "letzte_pruefung",
+        "title": "Letzte Pruefung",
+        "type": "date",
+        "format": "default"
+      },
+      {
+        "name": "prioritaet",
+        "title": "Prioritaet",
+        "type": "string",
+        "constraints": {
+          "enum": ["hoch", "mittel", "niedrig"]
+        }
+      },
+      {
+        "name": "hinweis",
+        "title": "Hinweis",
+        "type": "string"
+      }
+    ],
+    "primaryKey": "id"
+  }
+}

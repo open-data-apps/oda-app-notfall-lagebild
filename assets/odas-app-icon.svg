@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Notfall-Lagebild">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7eb8f7"/>
+      <stop offset="100%" stop-color="#3d3fa5"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="136%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="108" ry="108" fill="url(#bgGrad)"/>
+  <ellipse cx="158" cy="132" rx="178" ry="148" fill="#ffffff" fill-opacity="0.12"/>
+  <g filter="url(#shadow)" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 106l132 54v88c0 86-55 137-132 163-77-26-132-77-132-163v-88l132-54z" stroke-width="26" fill="#ffffff" fill-opacity="0.12"/>
+    <path d="M256 166v86" stroke-width="28"/>
+    <path d="M213 209h86" stroke-width="28"/>
+    <path d="M171 323c27-27 62-40 101-40s74 13 101 40" stroke-width="24"/>
+    <circle cx="171" cy="323" r="22" fill="#ffffff" stroke-width="0"/>
+    <circle cx="373" cy="323" r="22" fill="#ffffff" stroke-width="0"/>
+    <circle cx="272" cy="283" r="18" fill="#ffffff" stroke-width="0"/>
+  </g>
+</svg>

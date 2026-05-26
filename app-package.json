@@ -1,0 +1,187 @@
+{
+  "app-entwickler-id": "12343",
+  "app-entwickler-name": "ondics-gmbh",
+  "name-in-url": "notfall-lagebild-kommune",
+  "name": "Notfall-Lagebild",
+  "version": "1.0.0",
+  "odas-app-icon": "assets/odas-app-icon.svg",
+  "app-icon": "assets/odas-app-icon.svg",
+  "kurzbeschreibung": "Operatives Lagebild fuer kommunale Notfall-Infrastruktur, Status, Kapazitaeten und raeumliche Versorgung.",
+  "beschreibung": [
+    "_multiline_",
+    "Die App Notfall-Lagebild richtet sich an kommunale Verwaltungen, Krisenstaebe, Ordnungsbehoerden, Feuerwehr und Katastrophenschutz.",
+    "Sie visualisiert Notunterkuenfte, Notfall-Anlaufstellen, Sirenen, AED-Standorte, Feuerwehrhaeuser, mobile Versorgungspunkte und weitere kommunale Kriseninfrastruktur.",
+    "Kennzahlen, Filter, Karte, Diagramm und Tabelle zeigen schnell, welche Einrichtungen verfuegbar sind, wo Stoerungen auftreten und welche Stadtteile unterversorgt sind.",
+    "Die App nutzt einen konfigurierbaren JSON- oder CSV-Datenendpunkt ueber die Instanz-Variable apiurl."
+  ],
+  "tags-funktion": ["Karte", "Dashboard", "Krisenmanagement", "Filter", "Tabelle"],
+  "tags-dateityp": ["JSON", "CSV"],
+  "tags-datenart": ["Notfall-Infrastruktur", "Standorte", "Kapazitaeten", "Kommunale Vorsorge"],
+  "screenshots": [
+    "assets/Desktop_Screenshot.png",
+    "assets/Mobile_Screenshot.png"
+  ],
+  "daten": {
+    "beschreibung": "Tabellarischer Standortdatensatz fuer kommunale Notfall-Infrastruktur mit Typ, Status, Kapazitaet, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Pruefdatum.",
+    "schema": "assets/schema.json",
+    "beispiel": "Direkter JSON- oder CSV-Datenendpunkt fuer das kommunale Notfall-Lagebild.",
+    "beispiel-url": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7"
+  },
+  "branding-css": "",
+  "api-version": "1",
+  "instanz-config": {
+    "seitentitel": {
+      "label": "Seitentitel",
+      "hilfe": "Der Seitentitel wird im Browser-Tab der App angezeigt.",
+      "default": "Notfall-Lagebild",
+      "format": {
+        "typ": "string",
+        "laenge": 80
+      },
+      "erforderlich": "ja"
+    },
+    "lizenz": {
+      "label": "Lizenz",
+      "hilfe": "Angabe der Lizenz, die fuer die Nutzung der App gilt.",
+      "default": "Open Software License (OSL)",
+      "format": {
+        "typ": "string",
+        "laenge": 80
+      },
+      "erforderlich": "ja"
+    },
+    "titel": {
+      "label": "Titel",
+      "hilfe": "Der Titel wird in der Titelzeile der App angezeigt.",
+      "default": "Notfall-Lagebild",
+      "format": {
+        "typ": "string",
+        "laenge": 80
+      },
+      "erforderlich": "ja"
+    },
+    "icon": {
+      "label": "App-Icon",
+      "hilfe": "Das Icon wird links oben in der Titelzeile angezeigt.",
+      "default": "{{{odp.logo}}}",
+      "format": {
+        "typ": "image",
+        "hoehe": 100,
+        "breite": 300
+      },
+      "erforderlich": "ja"
+    },
+    "kontakt": {
+      "label": "Kontakt",
+      "hilfe": "Der Text wird im Menuepunkt Kontakt angezeigt.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": [
+        "_multiline_",
+        "Fachlicher Kontakt: Amt fuer Bevoelkerungsschutz",
+        "E-Mail: <a href='mailto:{{odp.anbieter.email}}'>{{odp.anbieter.email}}</a>"
+      ],
+      "erforderlich": "ja"
+    },
+    "beschreibung": {
+      "label": "Beschreibung",
+      "hilfe": "Der Text wird im Menuepunkt Ueber diese App angezeigt.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": [
+        "_multiline_",
+        "Die App zeigt ein operatives Lagebild fuer kommunale Notfall-Infrastruktur.",
+        "Sie unterstuetzt Lageeinschaetzung, Ressourcensteuerung und kommunale Vorsorgeplanung.",
+        "## Datenquelle",
+        "Die Standardquelle ist die externe JSON-Ressource unter <a href=\"{{appinstanz.urlDaten}}\">{{appinstanz.urlDaten}}</a>.",
+        "Fuer ODAS-Deployments kann der Abruf bei Bedarf ueber den integrierten Proxy laufen.",
+        "## Open Data App Store",
+        "Der Open Data App Store wird betrieben von <a href=\"{{odas.betreiber.url}}\">{{odas.betreiber.name}}</a>."
+      ],
+      "erforderlich": "ja"
+    },
+    "impressum": {
+      "label": "Impressum",
+      "hilfe": "Der Text wird im Menuepunkt Impressum angezeigt.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": [
+        "_multiline_",
+        "### Anbieter",
+        "{{{odp.anbieter.orgName}}}",
+        "{{{odp.anbieter.orgUnit}}}",
+        "{{odp.anbieter.strasse}}",
+        "{{odp.anbieter.plzort}}",
+        "Website: <a href='{{odp.anbieter.url-extern}}' target='_blank'>{{odp.anbieter.url-extern}}</a>"
+      ],
+      "erforderlich": "ja"
+    },
+    "datenschutz": {
+      "label": "Datenschutz",
+      "hilfe": "Der Text wird im Menuepunkt Datenschutz angezeigt.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": [
+        "_multiline_",
+        "Die App verarbeitet ausschliesslich offene Standortdaten oder Demo-Daten ohne personenbezogene Detaildaten."
+      ],
+      "erforderlich": "ja"
+    },
+    "urlDaten": {
+      "label": "URL zum Datensatz im ODP",
+      "hilfe": "Datensatz- oder Ressourcenseite im Open Data Portal.",
+      "format": {
+        "typ": "url"
+      },
+      "default": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7",
+      "beispiel": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7",
+      "erforderlich": "ja"
+    },
+    "fusszeile": {
+      "label": "Fusszeile",
+      "hilfe": "Wird unten auf der Website angezeigt.",
+      "format": {
+        "typ": "string",
+        "laenge": 160
+      },
+      "default": "(C) Copyright {{jahr}} | App & Daten: {{odp.anbieter.name}} | App-Entwickler: {{app.developer.name}} | ODAS: {{odas.betreiber.name}}",
+      "erforderlich": "ja"
+    },
+    "apiurl": {
+      "label": "URL zu den Standortdaten",
+      "hilfe": "Direkter JSON- oder CSV-Endpunkt der Standortdaten.",
+      "format": {
+        "typ": "url",
+        "laenge": 255
+      },
+      "default": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
+      "beispiel": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
+      "erforderlich": "ja"
+    },
+    "useProxy": {
+      "label": "ODAS-Proxy verwenden",
+      "hilfe": "Bei ja ruft die App externe Datenquellen im ODAS-Betrieb ueber den ODAS-Proxy ab. In lokalen Live-Server-Tests versucht die App weiterhin den Direktabruf.",
+      "format": {
+        "typ": "dropdown",
+        "optionen": ["nein", "ja"],
+        "default": "ja"
+      },
+      "default": "ja",
+      "erforderlich": "nein"
+    },
+    "sprache": {
+      "label": "Sprache der App",
+      "hilfe": "Angabe der App-Sprache.",
+      "format": {
+        "typ": "dropdown",
+        "optionen": ["de"],
+        "default": "de"
+      },
+      "erforderlich": "ja"
+    }
+  }
+}
