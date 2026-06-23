@@ -5,21 +5,24 @@
   "lizenz": "Open Software License (OSL)",
   "icon": "logo_ondics.png",
   "beschreibung": [
-    "Die App zeigt ein operatives Lagebild fuer kommunale Notfall-Infrastruktur, Standorte, Status, Kapazitaeten und raeumliche Versorgung.",
-    " Sie richtet sich an kommunale Verwaltungen, Krisenstaebe, Feuerwehr, Katastrophenschutz und weitere institutionelle Stellen.",
-    " Die Standardquelle ist eine externe JSON-Ressource; weitere direkte JSON- oder CSV-Endpunkte koennen ueber apiurl konfiguriert werden."
+    "Die App zeigt ein operatives Lagebild für kommunale Notfall-Infrastruktur, Standorte, Status, Kapazitäten und räumliche Versorgung.",
+    "## Für wen ist diese App?",
+    "Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie an interessierte Bürgerinnen und Bürger. Voraussetzung ist kein spezielles Datenwissen – wer die Notfall-Infrastruktur im Überblick braucht, kann die App direkt nutzen.",
+    "## Datenquelle",
+    "Die Daten stammen aus dem hinterlegten Open-Data-Datensatz unter <a href=\"{{appinstanz.urlDaten}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.urlDaten}}</a>.",
+    "Abgerufen wird die Ressource direkt über <a href=\"{{appinstanz.apiurl}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.apiurl}}</a>; für ODAS-Deployments kann der Abruf bei Bedarf über den integrierten Proxy laufen."
   ],
   "kontakt": [
-    "Fachlicher Kontakt: Amt fuer Bevoelkerungsschutz<br>",
+    "Fachlicher Kontakt: Amt für Bevölkerungsschutz<br>",
     "E-Mail: <a href='mailto:lagebild@example.org'>lagebild@example.org</a>"
   ],
   "impressum": [
     "Musterkommune<br>",
-    "Stabsstelle Bevoelkerungsschutz<br>",
+    "Stabsstelle Bevölkerungsschutz<br>",
     "Rathausplatz 1<br>",
     "73728 Musterstadt"
   ],
-  "datenschutz": "Die App verarbeitet ausschliesslich offene oder demoartige Standortdaten ohne personenbezogene Detaildaten.",
+  "datenschutz": "Die App verarbeitet ausschließlich offene oder demoartige Standortdaten ohne personenbezogene Detaildaten.",
   "urlDaten": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7",
   "fusszeile": [
     "(C) Copyright 2026 | ",
@@ -29,5 +32,13 @@
   ],
   "apiurl": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
   "useProxy": "ja",
+  "weiterfuehrendeLinks": "<ul><li><a href='https://www.bbk.bund.de/' target='_blank'>Bundesamt für Bevölkerungsschutz und Katastrophenhilfe</a></li><li><a href='https://open-data-app-store.de' target='_blank'>Open Data App Store</a></li></ul>",
+  "datenquelleHinweis": "<p>Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.</p><p>Die Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.</p>",
+  "datenStand": "Stand: abhängig von Datenquelle",
+  "kpiKontext1": "Standorte mit Status 'aktiv' im Datenbestand.",
+  "kpiKontext2": "Standorte mit Status 'eingeschränkt' oder 'außer Betrieb'.",
+  "kpiKontext3": "Summe aller verfügbaren Plätze über alle Standorte.",
+  "kpiKontext4": "Stadtteile, deren aktive Standorte die Mindestschwelle unterschreiten.",
+  "kpiKontext5": "Standorte, deren letzte Prüfung länger als der Grenzwert zurückliegt.",
   "sprache": "de"
 }

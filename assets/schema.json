@@ -2,7 +2,7 @@
   "profile": "tabular-data-resource",
   "name": "notfall-lagebild",
   "title": "Notfall-Lagebild",
-  "description": "Standortdaten kommunaler Notfall-Infrastruktur fuer ein operatives Lagebild.",
+  "description": "Standortdaten kommunaler Notfall-Infrastruktur für ein operatives Lagebild.",
   "schema": {
     "fields": [
       {
@@ -39,17 +39,17 @@
         "title": "Betriebszustand",
         "type": "string",
         "constraints": {
-          "enum": ["aktiv", "eingeschraenkt", "ausser Betrieb", "geplant"]
+          "enum": ["aktiv", "eingeschränkt", "außer Betrieb", "geplant"]
         }
       },
       {
         "name": "kapazitaet_max",
-        "title": "Gesamtkapazitaet",
+        "title": "Gesamtkapazität",
         "type": "integer"
       },
       {
         "name": "kapazitaet_verfuegbar",
-        "title": "Freie Kapazitaet",
+        "title": "Freie Kapazität",
         "type": "integer"
       },
       {
@@ -59,7 +59,7 @@
       },
       {
         "name": "strasse",
-        "title": "Strasse und Hausnummer",
+        "title": "Straße und Hausnummer",
         "type": "string"
       },
       {
@@ -84,7 +84,7 @@
       },
       {
         "name": "lon",
-        "title": "Laengengrad",
+        "title": "Längengrad",
         "type": "number"
       },
       {
@@ -99,17 +99,17 @@
       },
       {
         "name": "wasser_verfuegbar",
-        "title": "Wasser verfuegbar",
+        "title": "Wasser verfügbar",
         "type": "boolean"
       },
       {
         "name": "sanitaer_verfuegbar",
-        "title": "Sanitaer verfuegbar",
+        "title": "Sanitär verfügbar",
         "type": "boolean"
       },
       {
         "name": "betreiber",
-        "title": "Betreiber oder Zustaendigkeit",
+        "title": "Betreiber oder Zuständigkeit",
         "type": "string"
       },
       {
@@ -119,13 +119,13 @@
       },
       {
         "name": "letzte_pruefung",
-        "title": "Letzte Pruefung",
+        "title": "Letzte Prüfung",
         "type": "date",
         "format": "default"
       },
       {
         "name": "prioritaet",
-        "title": "Prioritaet",
+        "title": "Priorität",
         "type": "string",
         "constraints": {
           "enum": ["hoch", "mittel", "niedrig"]

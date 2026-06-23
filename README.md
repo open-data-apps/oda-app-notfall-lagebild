@@ -1,8 +1,8 @@
 # Notfall-Lagebild
 
-Die App **Notfall-Lagebild** bietet ein operatives Dashboard fuer kommunale Notfall-Infrastruktur, Standorte, Status, Kapazitaeten und raeumliche Versorgung.
+Die App **Notfall-Lagebild** bietet ein operatives Dashboard für kommunale Notfall-Infrastruktur, Standorte, Status, Kapazitäten und räumliche Versorgung.
 
-Die App ist fuer die Verwendung im [Open Data App Store](https://open-data-app-store.de/) gemacht und entspricht dem ODAS-Modell einer konfigurierbaren Open Data App.
+Die App ist für die Verwendung im [Open Data App Store](https://open-data-app-store.de/) gemacht und entspricht dem ODAS-Modell einer konfigurierbaren Open Data App.
 
 ---
 
@@ -11,10 +11,10 @@ Die App ist fuer die Verwendung im [Open Data App Store](https://open-data-app-s
 Die App ist eine Single Page Application mit:
 
 - Logo-Anzeige
-- Menue
-- Seiten fuer Impressum, Datenschutz, Beschreibung, Kontakt und Hauptinhalt
-- Kennzahlen fuer aktive, gestoerte und ueberfaellige Standorte
-- Filter fuer Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Prioritaet und Freitextsuche
+- Menü
+- Seiten für Impressum, Datenschutz, Beschreibung, Kontakt und Hauptinhalt
+- Kennzahlen für aktive, gestörte und überfällige Standorte
+- Filter für Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Priorität und Freitextsuche
 - Interaktive Leaflet-Karte mit farbigen Status-Markern, Clustering, Popups, Legende und optionalem 1-km-Radius
 - Chart.js-Balkendiagramm "Standorte nach Typ"
 - Sortierbare, paginierte Standorttabelle
@@ -22,19 +22,25 @@ Die App ist eine Single Page Application mit:
 
 ---
 
+## Für wen ist diese App?
+
+Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie an interessierte Bürgerinnen und Bürger. Voraussetzung ist kein spezielles Datenwissen – wer die Notfall-Infrastruktur im Überblick braucht, kann die App direkt nutzen.
+
+---
+
 ## Datenformat
 
-Die App unterstuetzt folgende Datenquellen:
+Die App unterstützt folgende Datenquellen:
 
 - **Standardquelle**: externe JSON-Ressource unter `https://open-data-musterstadt.ckan.de/.../download/notfall-lagebild-demo.json`
 - **JSON**: Array oder Objekt mit `records`, `results`, `data` oder direkten CKAN-`datastore_search`-Antworten
 - **CSV**: Komma- oder Semikolon-separierte Dateien mit Kopfzeile
 
-Fuer CORS-sensitive Datenquellen ist der ODAS-Proxy standardmaessig aktiviert. Im ODAS-Betrieb ruft die App externe Pfade per `POST` ueber `/odp-data?path=...` ab; bei lokalen Live-Server-Tests versucht sie weiter zuerst den Direktabruf.
+Für CORS-sensitive Datenquellen ist der ODAS-Proxy standardmäßig aktiviert. Im ODAS-Betrieb ruft die App externe Pfade per `POST` über `/odp-data?path=...` ab; bei lokalen Live-Server-Tests versucht sie weiter zuerst den Direktabruf.
 
-### Gebuendelte Beispieldaten
+### Gebündelte Beispieldaten
 
-Zusaetzlich liegen statische Beispielquellen im `assets`-Ordner. Sie koennen bei Bedarf manuell als alternative `apiurl` verwendet werden.
+Zusätzlich liegen statische Beispielquellen im `assets`-Ordner. Sie können bei Bedarf manuell als alternative `apiurl` verwendet werden.
 
 | Datei | Verwendung |
 | --- | --- |
@@ -43,9 +49,9 @@ Zusaetzlich liegen statische Beispielquellen im `assets`-Ordner. Sie koennen bei
 
 ---
 
-## Kompatible Datensaetze
+## Kompatible Datensätze
 
-Die App ist kompatibel mit tabellarischen Standortdatensaetzen, die folgende Kernfelder enthalten:
+Die App ist kompatibel mit tabellarischen Standortdatensätzen, die folgende Kernfelder enthalten:
 
 | Feld | Beschreibung |
 | --- | --- |
@@ -53,21 +59,21 @@ Die App ist kompatibel mit tabellarischen Standortdatensaetzen, die folgende Ker
 | `name` | Anzeigename |
 | `typ` | Hauptkategorie, z. B. Notunterkunft oder Sirenenstandort |
 | `untertyp` | Feinerer Typ |
-| `status` | `aktiv`, `eingeschraenkt`, `ausser Betrieb` oder `geplant` |
-| `kapazitaet_max` | Gesamtkapazitaet |
-| `kapazitaet_verfuegbar` | Freie Kapazitaet |
+| `status` | `aktiv`, `eingeschränkt`, `außer Betrieb` oder `geplant` |
+| `kapazitaet_max` | Gesamtkapazität |
+| `kapazitaet_verfuegbar` | Freie Kapazität |
 | `stadtteil` | Stadtteil oder Bezirk |
 | `lat` / `lon` | Koordinaten |
 | `barrierefrei` | Barrierefreiheit |
 | `stromversorgung_notstrom` | Notstrom vorhanden |
-| `wasser_verfuegbar` | Wasser verfuegbar |
-| `sanitaer_verfuegbar` | Sanitaer verfuegbar |
-| `betreiber` | Betreiber oder Zustaendigkeit |
-| `letzte_pruefung` | Datum der letzten Pruefung |
+| `wasser_verfuegbar` | Wasser verfügbar |
+| `sanitaer_verfuegbar` | Sanitär verfügbar |
+| `betreiber` | Betreiber oder Zuständigkeit |
+| `letzte_pruefung` | Datum der letzten Prüfung |
 | `prioritaet` | `hoch`, `mittel` oder `niedrig` |
 | `hinweis` | Zusatzinformation |
 
-Das vollstaendige Schema liegt in `assets/schema.json`.
+Das vollständige Schema liegt in `assets/schema.json`.
 
 ---
 
@@ -81,21 +87,21 @@ Wichtige Instanz-Parameter:
 | `seitentitel` | Browser-Tab-Titel | ja |
 | `urlDaten` | Datensatz- oder Ressourcenseite im ODP | ja |
 | `apiurl` | Direkter JSON-/CSV-Endpunkt | ja |
-| `useProxy` | ODAS-Proxy fuer CORS-sensitive Quellen verwenden | nein |
+| `useProxy` | ODAS-Proxy für CORS-sensitive Quellen verwenden | nein |
 
-Interne App-Defaults wie Kartenmittelpunkt, Zoom, KPI-Schwellen und Tabellen-Seitengroesse werden nicht mehr ueber Instanz-Config gepflegt, sondern direkt in `app/app.js` abgeleitet oder als interne Konstanten gefuehrt.
+Interne App-Defaults wie Kartenmittelpunkt, Zoom, KPI-Schwellen und Tabellen-Seitengröße werden nicht mehr über Instanz-Config gepflegt, sondern direkt in `app/app.js` abgeleitet oder als interne Konstanten geführt.
 
 ---
 
 ## Lokale Entwicklung
 
-Die ODAS-Live-Server-Validierung laeuft gegen:
+Die ODAS-Live-Server-Validierung läuft gegen:
 
 ```text
 http://127.0.0.1:5501/app/
 ```
 
-Fuer lokale Tests wird die Konfiguration aus `odas-config/config.json` geladen. In der ODAS-Plattform kommt die Konfiguration zur Laufzeit aus der App-Instanz.
+Für lokale Tests wird die Konfiguration aus `odas-config/config.json` geladen. In der ODAS-Plattform kommt die Konfiguration zur Laufzeit aus der App-Instanz.
 
 Alternativ kann die App per Docker gestartet werden:
 
@@ -112,10 +118,10 @@ make build up
 | `app/app.js` | Hauptlogik: Datenladen, Normalisierung, Filter, KPIs, Chart.js, Leaflet-Karte, Tabelle |
 | `app/app.css` | App-spezifische Darstellung |
 | `app-package.json` | ODAS-App-Metadaten und Instanz-Konfiguration |
-| `assets/schema.json` | Frictionless Data Schema fuer die Standortdaten |
+| `assets/schema.json` | Frictionless Data Schema für die Standortdaten |
 | `assets/odas-app-icon.svg` | App-Icon |
-| `assets/notfall-lagebild-demo.json` | Gebuendelte alternative JSON-Beispielquelle |
-| `assets/notfall-lagebild-demo.csv` | Gebuendelte alternative CSV-Beispielquelle |
+| `assets/notfall-lagebild-demo.json` | Gebündelte alternative JSON-Beispielquelle |
+| `assets/notfall-lagebild-demo.csv` | Gebündelte alternative CSV-Beispielquelle |
 | `odas-config/config.json` | Lokale Entwicklungs-Konfiguration |
 
 ---

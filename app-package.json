@@ -3,28 +3,28 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
-  "kurzbeschreibung": "Operatives Lagebild fuer kommunale Notfall-Infrastruktur, Status, Kapazitaeten und raeumliche Versorgung.",
+  "kurzbeschreibung": "Operatives Lagebild für kommunale Notfall-Infrastruktur, Status, Kapazitäten und räumliche Versorgung.",
   "beschreibung": [
     "_multiline_",
-    "Die App Notfall-Lagebild richtet sich an kommunale Verwaltungen, Krisenstaebe, Ordnungsbehoerden, Feuerwehr und Katastrophenschutz.",
-    "Sie visualisiert Notunterkuenfte, Notfall-Anlaufstellen, Sirenen, AED-Standorte, Feuerwehrhaeuser, mobile Versorgungspunkte und weitere kommunale Kriseninfrastruktur.",
-    "Kennzahlen, Filter, Karte, Diagramm und Tabelle zeigen schnell, welche Einrichtungen verfuegbar sind, wo Stoerungen auftreten und welche Stadtteile unterversorgt sind.",
-    "Die App nutzt einen konfigurierbaren JSON- oder CSV-Datenendpunkt ueber die Instanz-Variable apiurl."
+    "Die App Notfall-Lagebild richtet sich an kommunale Verwaltungen, Krisenstäbe, Ordnungsbehörden, Feuerwehr und Katastrophenschutz.",
+    "Sie visualisiert Notunterkünfte, Notfall-Anlaufstellen, Sirenen, AED-Standorte, Feuerwehrhäuser, mobile Versorgungspunkte und weitere kommunale Kriseninfrastruktur.",
+    "Kennzahlen, Filter, Karte, Diagramm und Tabelle zeigen schnell, welche Einrichtungen verfügbar sind, wo Störungen auftreten und welche Stadtteile unterversorgt sind.",
+    "Die App nutzt einen konfigurierbaren JSON- oder CSV-Datenendpunkt über die Instanz-Variable apiurl."
   ],
   "tags-funktion": ["Karte", "Dashboard", "Krisenmanagement", "Filter", "Tabelle"],
   "tags-dateityp": ["JSON", "CSV"],
-  "tags-datenart": ["Notfall-Infrastruktur", "Standorte", "Kapazitaeten", "Kommunale Vorsorge"],
+  "tags-datenart": ["Notfall-Infrastruktur", "Standorte", "Kapazitäten", "Kommunale Vorsorge"],
   "screenshots": [
     "assets/Desktop_Screenshot.png",
     "assets/Mobile_Screenshot.png"
   ],
   "daten": {
-    "beschreibung": "Tabellarischer Standortdatensatz fuer kommunale Notfall-Infrastruktur mit Typ, Status, Kapazitaet, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Pruefdatum.",
+    "beschreibung": "Tabellarischer Standortdatensatz für kommunale Notfall-Infrastruktur mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.",
     "schema": "assets/schema.json",
-    "beispiel": "Direkter JSON- oder CSV-Datenendpunkt fuer das kommunale Notfall-Lagebild.",
+    "beispiel": "Direkter JSON- oder CSV-Datenendpunkt für das kommunale Notfall-Lagebild.",
     "beispiel-url": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7"
   },
   "branding-css": "",
@@ -42,7 +42,7 @@
     },
     "lizenz": {
       "label": "Lizenz",
-      "hilfe": "Angabe der Lizenz, die fuer die Nutzung der App gilt.",
+      "hilfe": "Angabe der Lizenz, die für die Nutzung der App gilt.",
       "default": "Open Software License (OSL)",
       "format": {
         "typ": "string",
@@ -73,30 +73,32 @@
     },
     "kontakt": {
       "label": "Kontakt",
-      "hilfe": "Der Text wird im Menuepunkt Kontakt angezeigt.",
+      "hilfe": "Der Text wird im Menüpunkt Kontakt angezeigt.",
       "format": {
         "typ": "markdown"
       },
       "default": [
         "_multiline_",
-        "Fachlicher Kontakt: Amt fuer Bevoelkerungsschutz",
+        "Fachlicher Kontakt: Amt für Bevölkerungsschutz",
         "E-Mail: <a href='mailto:{{odp.anbieter.email}}'>{{odp.anbieter.email}}</a>"
       ],
       "erforderlich": "ja"
     },
     "beschreibung": {
       "label": "Beschreibung",
-      "hilfe": "Der Text wird im Menuepunkt Ueber diese App angezeigt.",
+      "hilfe": "Der Text wird im Menüpunkt Über diese App angezeigt.",
       "format": {
         "typ": "markdown"
       },
       "default": [
         "_multiline_",
-        "Die App zeigt ein operatives Lagebild fuer kommunale Notfall-Infrastruktur.",
-        "Sie unterstuetzt Lageeinschaetzung, Ressourcensteuerung und kommunale Vorsorgeplanung.",
+        "Die App zeigt ein operatives Lagebild für kommunale Notfall-Infrastruktur.",
+        "Sie unterstützt Lageeinschätzung, Ressourcensteuerung und kommunale Vorsorgeplanung.",
+        "## Für wen ist diese App?",
+        "Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie an interessierte Bürgerinnen und Bürger. Voraussetzung ist kein spezielles Datenwissen – wer die Notfall-Infrastruktur im Überblick braucht, kann die App direkt nutzen.",
         "## Datenquelle",
-        "Die Standardquelle ist die externe JSON-Ressource unter <a href=\"{{appinstanz.urlDaten}}\">{{appinstanz.urlDaten}}</a>.",
-        "Fuer ODAS-Deployments kann der Abruf bei Bedarf ueber den integrierten Proxy laufen.",
+        "Die Daten stammen aus dem hinterlegten Open-Data-Datensatz unter <a href=\"{{appinstanz.urlDaten}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.urlDaten}}</a>.",
+        "Abgerufen wird die Ressource direkt über <a href=\"{{appinstanz.apiurl}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.apiurl}}</a>; für ODAS-Deployments kann der Abruf bei Bedarf über den integrierten Proxy laufen.",
         "## Open Data App Store",
         "Der Open Data App Store wird betrieben von <a href=\"{{odas.betreiber.url}}\">{{odas.betreiber.name}}</a>."
       ],
@@ -104,7 +106,7 @@
     },
     "impressum": {
       "label": "Impressum",
-      "hilfe": "Der Text wird im Menuepunkt Impressum angezeigt.",
+      "hilfe": "Der Text wird im Menüpunkt Impressum angezeigt.",
       "format": {
         "typ": "markdown"
       },
@@ -121,13 +123,13 @@
     },
     "datenschutz": {
       "label": "Datenschutz",
-      "hilfe": "Der Text wird im Menuepunkt Datenschutz angezeigt.",
+      "hilfe": "Der Text wird im Menüpunkt Datenschutz angezeigt.",
       "format": {
         "typ": "markdown"
       },
       "default": [
         "_multiline_",
-        "Die App verarbeitet ausschliesslich offene Standortdaten oder Demo-Daten ohne personenbezogene Detaildaten."
+        "Die App verarbeitet ausschließlich offene Standortdaten oder Demo-Daten ohne personenbezogene Detaildaten."
       ],
       "erforderlich": "ja"
     },
@@ -142,7 +144,7 @@
       "erforderlich": "ja"
     },
     "fusszeile": {
-      "label": "Fusszeile",
+      "label": "Fußzeile",
       "hilfe": "Wird unten auf der Website angezeigt.",
       "format": {
         "typ": "string",
@@ -164,13 +166,75 @@
     },
     "useProxy": {
       "label": "ODAS-Proxy verwenden",
-      "hilfe": "Bei ja ruft die App externe Datenquellen im ODAS-Betrieb ueber den ODAS-Proxy ab. In lokalen Live-Server-Tests versucht die App weiterhin den Direktabruf.",
+      "hilfe": "Bei ja ruft die App externe Datenquellen im ODAS-Betrieb über den ODAS-Proxy ab. In lokalen Live-Server-Tests versucht die App weiterhin den Direktabruf.",
       "format": {
         "typ": "dropdown",
         "optionen": ["nein", "ja"],
         "default": "ja"
       },
       "default": "ja",
+      "erforderlich": "nein"
+    },
+    "weiterfuehrendeLinks": {
+      "label": "Weiterführende Links",
+      "hilfe": "Verwandte Datensätze / Hintergrundquellen (HTML/Markdown). Leer = ausgeblendet.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": "<ul><li><a href='https://www.bbk.bund.de/' target='_blank'>Bundesamt für Bevölkerungsschutz und Katastrophenhilfe</a></li><li><a href='https://open-data-app-store.de' target='_blank'>Open Data App Store</a></li></ul>",
+      "erforderlich": "nein"
+    },
+    "datenquelleHinweis": {
+      "label": "Methodik / Datenquelle-Hinweis",
+      "hilfe": "Herkunft, Erhebungsmethode und Limitierungen (HTML/Markdown). Leer = ausgeblendet.",
+      "format": {
+        "typ": "markdown"
+      },
+      "default": "<p>Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.</p><p>Die Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.</p>",
+      "erforderlich": "nein"
+    },
+    "datenStand": {
+      "label": "Datenstand",
+      "hilfe": "Freitext-Hinweis zum Stand der Daten. Leer = ausgeblendet.",
+      "format": {
+        "typ": "string"
+      },
+      "default": "Stand: abhängig von Datenquelle",
+      "erforderlich": "nein"
+    },
+    "kpiKontext1": {
+      "label": "KPI-Erklärung: Aktive Standorte",
+      "hilfe": "Erklärtext unter dem KPI 'Aktive Standorte'. Leer = ausgeblendet.",
+      "format": { "typ": "string" },
+      "default": "Standorte mit Status 'aktiv' im Datenbestand.",
+      "erforderlich": "nein"
+    },
+    "kpiKontext2": {
+      "label": "KPI-Erklärung: Gestörte Standorte",
+      "hilfe": "Erklärtext unter dem KPI 'Gestörte Standorte'. Leer = ausgeblendet.",
+      "format": { "typ": "string" },
+      "default": "Standorte mit Status 'eingeschränkt' oder 'außer Betrieb'.",
+      "erforderlich": "nein"
+    },
+    "kpiKontext3": {
+      "label": "KPI-Erklärung: Freie Gesamtkapazität",
+      "hilfe": "Erklärtext unter dem KPI 'Freie Gesamtkapazität'. Leer = ausgeblendet.",
+      "format": { "typ": "string" },
+      "default": "Summe aller verfügbaren Plätze über alle Standorte.",
+      "erforderlich": "nein"
+    },
+    "kpiKontext4": {
+      "label": "KPI-Erklärung: Unterversorgte Stadtteile",
+      "hilfe": "Erklärtext unter dem KPI 'Unterversorgte Stadtteile'. Leer = ausgeblendet.",
+      "format": { "typ": "string" },
+      "default": "Stadtteile, deren aktive Standorte die Mindestschwelle unterschreiten.",
+      "erforderlich": "nein"
+    },
+    "kpiKontext5": {
+      "label": "KPI-Erklärung: Prüfungen überfällig",
+      "hilfe": "Erklärtext unter dem KPI 'Prüfungen überfällig'. Leer = ausgeblendet.",
+      "format": { "typ": "string" },
+      "default": "Standorte, deren letzte Prüfung länger als der Grenzwert zurückliegt.",
       "erforderlich": "nein"
     },
     "sprache": {

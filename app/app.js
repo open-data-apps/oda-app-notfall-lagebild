@@ -7,8 +7,8 @@ const NLB_STATUS = {
 
 const NLB_STATUS_LABELS = {
   [NLB_STATUS.active]: "Aktiv",
-  [NLB_STATUS.restricted]: "Eingeschraenkt",
-  [NLB_STATUS.offline]: "Ausser Betrieb",
+  [NLB_STATUS.restricted]: "Eingeschränkt",
+  [NLB_STATUS.offline]: "Außer Betrieb",
   [NLB_STATUS.planned]: "Geplant",
 };
 
@@ -63,7 +63,47 @@ function normalizeEmergencyConfig(configdata = {}) {
   config.description = deriveEmergencyDescription(config);
   config.apiurl = String(config.apiurl || config.apiUrl || "").trim();
   config.useProxy = String(config.useProxy || config.odasProxy || "").toLowerCase() === "ja";
+  config.weiterfuehrendeLinks = String(config.weiterfuehrendeLinks || "").trim();
+  config.datenquelleHinweis = String(config.datenquelleHinweis || "").trim();
+  config.datenStand = String(config.datenStand || "").trim();
+  for (let i = 1; i <= 5; i++) {
+    config["kpiKontext" + i] = String(config["kpiKontext" + i] || "").trim();
+  }
   return config;
+}
+
+function renderWeitereInfos(config = {}) {
+  const links = String(config.weiterfuehrendeLinks || "").trim();
+  if (!links) return "";
+  return (
+    '<section class="nlb-section nlb-weitere-infos">' +
+    "<h3>Weitere Informationen</h3>" +
+    "<div>" +
+    links +
+    "</div>" +
+    "</section>"
+  );
+}
+
+function renderMethodikbox(config = {}) {
+  const hinweis = String(config.datenquelleHinweis || "").trim();
+  const stand = String(config.datenStand || "").trim();
+  if (!hinweis && !stand) return "";
+  const standHtml = stand
+    ? `<p class="text-muted small mb-2">${escapeHtml(stand)}</p>`
+    : "";
+  return (
+    '<section class="nlb-section nlb-methodik">' +
+    '<button class="nlb-methodik-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-methodik-body" aria-expanded="false" aria-controls="nlb-methodik-body">' +
+    '<h3 class="mb-0">Methodik &amp; Datenquelle</h3>' +
+    '<span class="nlb-methodik-chevron" aria-hidden="true">&#9662;</span>' +
+    "</button>" +
+    '<div id="nlb-methodik-body" class="collapse">' +
+    standHtml +
+    hinweis +
+    "</div>" +
+    "</section>"
+  );
 }
 
 async function initializeEmergencyDashboard(state) {
@@ -116,7 +156,7 @@ async function loadEmergencyRecords(config) {
   );
 
   if (!records.length) {
-    throw new Error("Die Datenquelle enthaelt keine verwertbaren Datensaetze.");
+    throw new Error("Die Datenquelle enthält keine verwertbaren Datensätze.");
   }
 
   return records;
@@ -185,7 +225,7 @@ function parseEmergencyData(rawText) {
 
 function deriveEmergencyDescription(config = {}) {
   const fallback =
-    "Operatives Lagebild fuer kommunale Notfall-Infrastruktur, Status, Kapazitaeten und raeumliche Versorgung.";
+    "Operatives Lagebild für kommunale Notfall-Infrastruktur, Status, Kapazitäten und räumliche Versorgung.";
   const rawDescription = Array.isArray(config.beschreibung)
     ? config.beschreibung.join("")
     : String(config.beschreibung || "");
@@ -502,7 +542,7 @@ function renderEmergencyShell(config) {
           <p class="text-muted small mt-2 mb-0" id="nlb-data-status">Datenstand wird geladen ...</p>
         </div>
         <div class="nlb-toolbar-actions">
-          <button type="button" class="btn btn-outline-secondary" id="nlb-reset-filters">Filter zuruecksetzen</button>
+          <button type="button" class="btn btn-outline-secondary" id="nlb-reset-filters">Filter zurücksetzen</button>
         </div>
       </div>
 
@@ -510,11 +550,11 @@ function renderEmergencyShell(config) {
       <div class="nlb-loading" id="nlb-loading" aria-live="polite"></div>
 
       <div class="nlb-kpi-grid" id="nlb-kpis">
-        ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit")}
-        ${renderKpiCard("disrupted", "Gestoerte Standorte", "0", "Eingeschraenkt oder ausser Betrieb")}
-        ${renderKpiCard("capacity", "Freie Gesamtkapazitaet", "0", "Verfuegbare Plaetze")}
-        ${renderKpiCard("underserved", "Unterversorgte Stadtteile", "0", "Aktive Standorte unter Schwelle")}
-        ${renderKpiCard("overdue", "Pruefungen ueberfaellig", "0", "Aelter als Grenzwert")}
+        ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit", config.kpiKontext1)}
+        ${renderKpiCard("disrupted", "Gestörte Standorte", "0", "Eingeschränkt oder außer Betrieb", config.kpiKontext2)}
+        ${renderKpiCard("capacity", "Freie Gesamtkapazität", "0", "Verfügbare Plätze", config.kpiKontext3)}
+        ${renderKpiCard("underserved", "Unterversorgte Stadtteile", "0", "Aktive Standorte unter Schwelle", config.kpiKontext4)}
+        ${renderKpiCard("overdue", "Prüfungen überfällig", "0", "Älter als Grenzwert", config.kpiKontext5)}
       </div>
 
       <section class="nlb-filters" aria-label="Filter">
@@ -526,7 +566,7 @@ function renderEmergencyShell(config) {
           ${renderFilterSelect("betreiber", "Betreiber")}
           ${renderFilterSelect("barrierefrei", "Barrierefrei")}
           ${renderFilterSelect("notstrom", "Notstrom")}
-          ${renderFilterSelect("prioritaet", "Prioritaet")}
+          ${renderFilterSelect("prioritaet", "Priorität")}
           <div class="col-12 col-lg-4">
             <label class="form-label" for="nlb-filter-search">Suche</label>
             <input class="form-control" id="nlb-filter-search" type="search" placeholder="Name, Adresse, Hinweis">
@@ -573,22 +613,32 @@ function renderEmergencyShell(config) {
           </table>
         </div>
         <div class="nlb-pagination">
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page">Zurueck</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page">Zurück</button>
           <span id="nlb-page-info">Seite 1 von 1</span>
           <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-next-page">Weiter</button>
         </div>
       </section>
+
+      ${renderMethodikbox(config)}
+      ${renderWeitereInfos(config)}
     </section>
   `;
 }
 
-function renderKpiCard(id, label, value, hint) {
+function renderKpiCard(id, label, value, hint, kontext) {
+  const k = String(kontext || "").trim();
+  const kontextHtml = k
+    ? `<button class="nlb-kpi-info-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-kpi-kontext-${id}" aria-expanded="false" aria-controls="nlb-kpi-kontext-${id}" aria-label="Erklärung zu diesem Wert"><span class="nlb-kpi-info-icon" aria-hidden="true">ⓘ</span></button><div id="nlb-kpi-kontext-${id}" class="collapse"><div class="nlb-kpi-kontext">${escapeHtml(k)}</div></div>`
+    : "";
   return `
-    <button type="button" class="nlb-kpi" data-quickfilter="${id}">
-      <span>${label}</span>
-      <strong id="nlb-kpi-${id}">${value}</strong>
-      <small>${hint}</small>
-    </button>
+    <div class="nlb-kpi-wrap">
+      <button type="button" class="nlb-kpi" data-quickfilter="${id}">
+        <span>${label}</span>
+        <strong id="nlb-kpi-${id}">${value}</strong>
+        <small>${hint}</small>
+      </button>
+      ${kontextHtml}
+    </div>
   `;
 }
 
@@ -780,10 +830,10 @@ function updateEmergencyStatusLine(state) {
 function quickFilterLabel(value) {
   const labels = {
     active: "aktive Standorte",
-    disrupted: "gestoerte Standorte",
-    capacity: "Standorte mit freier Kapazitaet",
+    disrupted: "gestörte Standorte",
+    capacity: "Standorte mit freier Kapazität",
     underserved: "unterversorgte Stadtteile",
-    overdue: "ueberfaellige Pruefungen",
+    overdue: "überfällige Prüfungen",
   };
   return labels[value] || value;
 }
@@ -888,9 +938,9 @@ function renderEmergencyPopup(record) {
       <dl>
         <dt>Typ</dt><dd>${escapeHtml(record.typ)}</dd>
         <dt>Status</dt><dd>${escapeHtml(NLB_STATUS_LABELS[record.status] || record.status)}</dd>
-        <dt>Kapazitaet</dt><dd>${record.kapazitaet_verfuegbar} / ${record.kapazitaet_max}</dd>
+        <dt>Kapazität</dt><dd>${record.kapazitaet_verfuegbar} / ${record.kapazitaet_max}</dd>
         <dt>Betreiber</dt><dd>${escapeHtml(record.betreiber || "-")}</dd>
-        <dt>Letzte Pruefung</dt><dd>${escapeHtml(formatDate(record.letzte_pruefung))}</dd>
+        <dt>Letzte Prüfung</dt><dd>${escapeHtml(formatDate(record.letzte_pruefung))}</dd>
       </dl>
     </div>
   `;
@@ -1055,7 +1105,7 @@ function renderEmergencyTable(state) {
     ["kapazitaet_verfuegbar", "Frei"],
     ["barrierefrei", "Barrierefrei"],
     ["stromversorgung_notstrom", "Notstrom"],
-    ["letzte_pruefung", "Letzte Pruefung"],
+    ["letzte_pruefung", "Letzte Prüfung"],
     ["betreiber", "Betreiber"],
   ];
   const maxPage = Math.max(1, Math.ceil(state.filteredRecords.length / state.pageSize));

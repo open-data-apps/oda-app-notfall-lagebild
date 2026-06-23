@@ -575,3 +575,117 @@
 #nlb-data-status a:hover {
   text-decoration: underline;
 }
+
+/* Methodik & Weitere Informationen — im App-Card-Design (wie .nlb-panel) */
+.nlb-section {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  margin-top: 1.5rem;
+}
+.nlb-weitere-infos {
+  padding: 1rem 1.25rem;
+}
+.nlb-section h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.nlb-weitere-infos h3 {
+  margin-bottom: 0.75rem;
+}
+.nlb-weitere-infos ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nlb-weitere-infos li + li {
+  margin-top: 0.5rem;
+}
+.nlb-weitere-infos a {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: none;
+}
+.nlb-weitere-infos a:hover,
+.nlb-weitere-infos a:focus-visible {
+  text-decoration: underline;
+}
+
+/* Methodikbox toggle */
+.nlb-methodik-toggle {
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  padding: 1rem 1.25rem;
+  color: inherit;
+}
+.nlb-methodik-toggle:hover,
+.nlb-methodik-toggle:focus-visible {
+  background: #f8fafc;
+  outline: none;
+}
+.nlb-methodik-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  font-size: 1.25rem;
+  color: #486581;
+}
+.nlb-methodik-toggle[aria-expanded="true"] .nlb-methodik-chevron {
+  transform: rotate(180deg);
+}
+.nlb-methodik #nlb-methodik-body {
+  border-top: 1px solid #eef2f6;
+  padding: 1rem 1.25rem;
+  color: #364a5e;
+}
+.nlb-methodik #nlb-methodik-body p:last-child {
+  margin-bottom: 0;
+}
+.nlb-kpi-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.nlb-kpi-wrap > .nlb-kpi {
+  width: 100%;
+  flex: 1 1 auto;
+}
+.nlb-kpi-info-toggle {
+  align-items: center;
+  background: none;
+  border: none;
+  color: #9aa5b1;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.75rem;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+.nlb-kpi-info-toggle:hover,
+.nlb-kpi-info-toggle:focus-visible,
+.nlb-kpi-info-toggle:not(.collapsed) {
+  color: #334155;
+}
+.nlb-kpi-info-icon {
+  font-size: 0.85rem;
+  font-style: normal;
+  line-height: 1;
+}
+.nlb-kpi-kontext {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color, #6c757d);
+  border-top: 1px solid #eef2f6;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+}
