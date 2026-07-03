@@ -9,14 +9,38 @@
   "kurzbeschreibung": "Operatives Lagebild für kommunale Notfall-Infrastruktur, Status, Kapazitäten und räumliche Versorgung.",
   "beschreibung": [
     "_multiline_",
-    "Die App Notfall-Lagebild richtet sich an kommunale Verwaltungen, Krisenstäbe, Ordnungsbehörden, Feuerwehr und Katastrophenschutz.",
-    "Sie visualisiert Notunterkünfte, Notfall-Anlaufstellen, Sirenen, AED-Standorte, Feuerwehrhäuser, mobile Versorgungspunkte und weitere kommunale Kriseninfrastruktur.",
-    "Kennzahlen, Filter, Karte, Diagramm und Tabelle zeigen schnell, welche Einrichtungen verfügbar sind, wo Störungen auftreten und welche Stadtteile unterversorgt sind.",
-    "Die App nutzt einen konfigurierbaren JSON- oder CSV-Datenendpunkt über die Instanz-Variable apiurl."
+    "<p>Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur, Statusinformationen und Kapazitäten in einer gemeinsamen Übersicht.</p>",
+    "<p>Die App hilft dabei, räumliche Versorgung und verfügbare Standorte schneller einzuordnen.</p>",
+    "<h3>Inhalte</h3>",
+    "<p>Die App verarbeitet Standorte mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.</p>",
+    "<p>Karte, Kennzahlen, Filter und Detailansichten unterstützen den operativen Überblick.</p>",
+    "<h3>Nutzung</h3>",
+    "<p>Filtern Sie nach Typ, Status oder Bereich und öffnen Sie einzelne Standorte für Detailinformationen. Die App unterstützt die Orientierung, ersetzt aber keine amtlichen Einsatz- oder Krisenentscheidungen.</p>",
+    "<h3>Für wen ist diese App?</h3>",
+    "<p>Die App richtet sich an Verwaltung, Krisenstäbe, Hilfsorganisationen und Bürger:innen, die Notfall-Infrastruktur verständlich betrachten möchten. Besondere Datenkenntnisse sind für die Nutzung nicht erforderlich.</p>",
+    "<h3>Datenquelle</h3>",
+    "<p>Die Daten werden aus einer konfigurierten JSON-Ressource mit Standort- und Lageinformationen geladen.</p>",
+    "<ul><li><strong>Open Data Portal:</strong> <a href=\"https://open-data-musterstadt.ckan.de\" target=\"_blank\" rel=\"noopener\">Open Data Musterstadt</a></li><li><strong>Datensatz/Ressource:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7\" target=\"_blank\" rel=\"noopener\">Notfall-Lagebild-Ressource</a></li><li><strong>Download:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json\" target=\"_blank\" rel=\"noopener\">JSON-Demoressource</a></li></ul>",
+    "<h3>Open Data App Store</h3>",
+    "<p>Diese App ist für den Open Data App Store vorbereitet und kann mit kommunalen Notfall-, Standort- oder Lagebilddaten betrieben werden.</p>"
   ],
-  "tags-funktion": ["Karte", "Dashboard", "Krisenmanagement", "Filter", "Tabelle"],
-  "tags-dateityp": ["JSON", "CSV"],
-  "tags-datenart": ["Notfall-Infrastruktur", "Standorte", "Kapazitäten", "Kommunale Vorsorge"],
+  "tags-funktion": [
+    "Karte",
+    "Dashboard",
+    "Krisenmanagement",
+    "Filter",
+    "Tabelle"
+  ],
+  "tags-dateityp": [
+    "JSON",
+    "CSV"
+  ],
+  "tags-datenart": [
+    "Notfall-Infrastruktur",
+    "Standorte",
+    "Kapazitäten",
+    "Kommunale Vorsorge"
+  ],
   "screenshots": [
     "assets/Desktop_Screenshot.png",
     "assets/Mobile_Screenshot.png"
@@ -92,15 +116,20 @@
       },
       "default": [
         "_multiline_",
-        "Die App zeigt ein operatives Lagebild für kommunale Notfall-Infrastruktur.",
-        "Sie unterstützt Lageeinschätzung, Ressourcensteuerung und kommunale Vorsorgeplanung.",
-        "## Für wen ist diese App?",
-        "Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie an interessierte Bürgerinnen und Bürger. Voraussetzung ist kein spezielles Datenwissen – wer die Notfall-Infrastruktur im Überblick braucht, kann die App direkt nutzen.",
-        "## Datenquelle",
-        "Die Daten stammen aus dem hinterlegten Open-Data-Datensatz unter <a href=\"{{appinstanz.urlDaten}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.urlDaten}}</a>.",
-        "Abgerufen wird die Ressource direkt über <a href=\"{{appinstanz.apiurl}}\" target=\"_blank\" rel=\"noopener\">{{appinstanz.apiurl}}</a>; für ODAS-Deployments kann der Abruf bei Bedarf über den integrierten Proxy laufen.",
-        "## Open Data App Store",
-        "Der Open Data App Store wird betrieben von <a href=\"{{odas.betreiber.url}}\">{{odas.betreiber.name}}</a>."
+        "<p>Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur, Statusinformationen und Kapazitäten in einer gemeinsamen Übersicht.</p>",
+        "<p>Die App hilft dabei, räumliche Versorgung und verfügbare Standorte schneller einzuordnen.</p>",
+        "<h3>Inhalte</h3>",
+        "<p>Die App verarbeitet Standorte mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.</p>",
+        "<p>Karte, Kennzahlen, Filter und Detailansichten unterstützen den operativen Überblick.</p>",
+        "<h3>Nutzung</h3>",
+        "<p>Filtern Sie nach Typ, Status oder Bereich und öffnen Sie einzelne Standorte für Detailinformationen. Die App unterstützt die Orientierung, ersetzt aber keine amtlichen Einsatz- oder Krisenentscheidungen.</p>",
+        "<h3>Für wen ist diese App?</h3>",
+        "<p>Die App richtet sich an Verwaltung, Krisenstäbe, Hilfsorganisationen und Bürger:innen, die Notfall-Infrastruktur verständlich betrachten möchten. Besondere Datenkenntnisse sind für die Nutzung nicht erforderlich.</p>",
+        "<h3>Datenquelle</h3>",
+        "<p>Die Daten werden aus einer konfigurierten JSON-Ressource mit Standort- und Lageinformationen geladen.</p>",
+        "<ul><li><strong>Open Data Portal:</strong> <a href=\"https://open-data-musterstadt.ckan.de\" target=\"_blank\" rel=\"noopener\">Open Data Musterstadt</a></li><li><strong>Datensatz/Ressource:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7\" target=\"_blank\" rel=\"noopener\">Notfall-Lagebild-Ressource</a></li><li><strong>Download:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json\" target=\"_blank\" rel=\"noopener\">JSON-Demoressource</a></li></ul>",
+        "<h3>Open Data App Store</h3>",
+        "<p>Diese App ist für den Open Data App Store vorbereitet und kann mit kommunalen Notfall-, Standort- oder Lagebilddaten betrieben werden.</p>"
       ],
       "erforderlich": "ja"
     },
@@ -169,7 +198,10 @@
       "hilfe": "Bei ja ruft die App externe Datenquellen im ODAS-Betrieb über den ODAS-Proxy ab. In lokalen Live-Server-Tests versucht die App weiterhin den Direktabruf.",
       "format": {
         "typ": "dropdown",
-        "optionen": ["nein", "ja"],
+        "optionen": [
+          "nein",
+          "ja"
+        ],
         "default": "ja"
       },
       "default": "ja",
@@ -205,35 +237,45 @@
     "kpiKontext1": {
       "label": "KPI-Erklärung: Aktive Standorte",
       "hilfe": "Erklärtext unter dem KPI 'Aktive Standorte'. Leer = ausgeblendet.",
-      "format": { "typ": "string" },
+      "format": {
+        "typ": "string"
+      },
       "default": "Standorte mit Status 'aktiv' im Datenbestand.",
       "erforderlich": "nein"
     },
     "kpiKontext2": {
       "label": "KPI-Erklärung: Gestörte Standorte",
       "hilfe": "Erklärtext unter dem KPI 'Gestörte Standorte'. Leer = ausgeblendet.",
-      "format": { "typ": "string" },
+      "format": {
+        "typ": "string"
+      },
       "default": "Standorte mit Status 'eingeschränkt' oder 'außer Betrieb'.",
       "erforderlich": "nein"
     },
     "kpiKontext3": {
       "label": "KPI-Erklärung: Freie Gesamtkapazität",
       "hilfe": "Erklärtext unter dem KPI 'Freie Gesamtkapazität'. Leer = ausgeblendet.",
-      "format": { "typ": "string" },
+      "format": {
+        "typ": "string"
+      },
       "default": "Summe aller verfügbaren Plätze über alle Standorte.",
       "erforderlich": "nein"
     },
     "kpiKontext4": {
       "label": "KPI-Erklärung: Unterversorgte Stadtteile",
       "hilfe": "Erklärtext unter dem KPI 'Unterversorgte Stadtteile'. Leer = ausgeblendet.",
-      "format": { "typ": "string" },
+      "format": {
+        "typ": "string"
+      },
       "default": "Stadtteile, deren aktive Standorte die Mindestschwelle unterschreiten.",
       "erforderlich": "nein"
     },
     "kpiKontext5": {
       "label": "KPI-Erklärung: Prüfungen überfällig",
       "hilfe": "Erklärtext unter dem KPI 'Prüfungen überfällig'. Leer = ausgeblendet.",
-      "format": { "typ": "string" },
+      "format": {
+        "typ": "string"
+      },
       "default": "Standorte, deren letzte Prüfung länger als der Grenzwert zurückliegt.",
       "erforderlich": "nein"
     },
@@ -242,7 +284,9 @@
       "hilfe": "Angabe der App-Sprache.",
       "format": {
         "typ": "dropdown",
-        "optionen": ["de"],
+        "optionen": [
+          "de"
+        ],
         "default": "de"
       },
       "erforderlich": "ja"
