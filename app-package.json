@@ -141,12 +141,8 @@
       },
       "default": [
         "_multiline_",
-        "### Anbieter",
-        "{{{odp.anbieter.orgName}}}",
-        "{{{odp.anbieter.orgUnit}}}",
-        "{{odp.anbieter.strasse}}",
-        "{{odp.anbieter.plzort}}",
-        "Website: <a href='{{odp.anbieter.url-extern}}' target='_blank'>{{odp.anbieter.url-extern}}</a>"
+        "<h4>Anbieter</h4>",
+        "<p>{{{odp.anbieter.orgName}}}<br>{{{odp.anbieter.orgUnit}}}<br>{{odp.anbieter.strasse}}<br>{{odp.anbieter.plzort}}<br>Website: <a href='{{odp.anbieter.url-extern}}' target='_blank'>{{odp.anbieter.url-extern}}</a></p>"
       ],
       "erforderlich": "ja"
     },
