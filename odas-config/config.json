@@ -1,5 +1,6 @@
 {
   "apiVersion": "1",
+  "proxyAktiv": "nein",
   "titel": "Notfall-Lagebild",
   "seitentitel": "Notfall-Lagebild",
   "lizenz": "Open Software License (OSL)",
@@ -39,7 +40,6 @@
     "ODAS: Open Data App Store"
   ],
   "apiurl": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
-  "useProxy": "ja",
   "weiterfuehrendeLinks": "<ul><li><a href='https://www.bbk.bund.de/' target='_blank'>Bundesamt für Bevölkerungsschutz und Katastrophenhilfe</a></li><li><a href='https://open-data-app-store.de' target='_blank'>Open Data App Store</a></li></ul>",
   "datenquelleHinweis": "<p>Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.</p><p>Die Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.</p>",
   "datenStand": "Stand: abhängig von Datenquelle",
