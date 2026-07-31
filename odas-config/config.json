@@ -3,7 +3,6 @@
   "proxyAktiv": "nein",
   "titel": "Notfall-Lagebild",
   "seitentitel": "Notfall-Lagebild",
-  "lizenz": "Open Software License (OSL)",
   "icon": "logo_ondics.png",
   "beschreibung": [
     "<p>Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur, Statusinformationen und Kapazitäten in einer gemeinsamen Übersicht.</p>",
@@ -48,5 +47,7 @@
   "kpiKontext3": "Summe aller verfügbaren Plätze über alle Standorte.",
   "kpiKontext4": "Stadtteile, deren aktive Standorte die Mindestschwelle unterschreiten.",
   "kpiKontext5": "Standorte, deren letzte Prüfung länger als der Grenzwert zurückliegt.",
-  "sprache": "de"
+  "sprache": "de",
+  "brandingCSS": "",
+  "brandingCSSFile": "../assets/branding.css"
 }

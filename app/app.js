@@ -59,9 +59,9 @@ function app(configdata = {}, enclosingHtmlDivElement) {
 
 function normalizeEmergencyConfig(configdata = {}) {
   const config = { ...configdata };
-  config.titel = config.titel || config.title || "Notfall-Lagebild";
+  config.titel = config.titel || "Notfall-Lagebild";
   config.description = deriveEmergencyDescription(config);
-  config.apiurl = String(config.apiurl || config.apiUrl || "").trim();
+  config.apiurl = String(config.apiurl || "").trim();
   config.proxyAktiv = String(configdata.proxyAktiv || "nein").trim().toLowerCase();
   config.weiterfuehrendeLinks = String(config.weiterfuehrendeLinks || "").trim();
   config.datenquelleHinweis = String(config.datenquelleHinweis || "").trim();

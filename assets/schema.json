@@ -1,142 +1,152 @@
 {
-  "profile": "tabular-data-resource",
+  "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
   "name": "notfall-lagebild",
   "title": "Notfall-Lagebild",
   "description": "Standortdaten kommunaler Notfall-Infrastruktur für ein operatives Lagebild.",
-  "schema": {
-    "fields": [
-      {
-        "name": "id",
-        "title": "Eindeutige Kennung",
-        "type": "string",
-        "constraints": {
-          "required": true
-        }
-      },
-      {
-        "name": "name",
-        "title": "Anzeigename",
-        "type": "string",
-        "constraints": {
-          "required": true
-        }
-      },
-      {
-        "name": "typ",
-        "title": "Hauptkategorie",
-        "type": "string",
-        "constraints": {
-          "required": true
-        }
-      },
-      {
-        "name": "untertyp",
-        "title": "Feinerer Typ",
-        "type": "string"
-      },
-      {
-        "name": "status",
-        "title": "Betriebszustand",
-        "type": "string",
-        "constraints": {
-          "enum": ["aktiv", "eingeschränkt", "außer Betrieb", "geplant"]
-        }
-      },
-      {
-        "name": "kapazitaet_max",
-        "title": "Gesamtkapazität",
-        "type": "integer"
-      },
-      {
-        "name": "kapazitaet_verfuegbar",
-        "title": "Freie Kapazität",
-        "type": "integer"
-      },
-      {
-        "name": "auslastung_prozent",
-        "title": "Auslastung in Prozent",
-        "type": "integer"
-      },
-      {
-        "name": "strasse",
-        "title": "Straße und Hausnummer",
-        "type": "string"
-      },
-      {
-        "name": "plz",
-        "title": "Postleitzahl",
-        "type": "string"
-      },
-      {
-        "name": "ort",
-        "title": "Ort",
-        "type": "string"
-      },
-      {
-        "name": "stadtteil",
-        "title": "Stadtteil oder Bezirk",
-        "type": "string"
-      },
-      {
-        "name": "lat",
-        "title": "Breitengrad",
-        "type": "number"
-      },
-      {
-        "name": "lon",
-        "title": "Längengrad",
-        "type": "number"
-      },
-      {
-        "name": "barrierefrei",
-        "title": "Barrierefrei",
-        "type": "boolean"
-      },
-      {
-        "name": "stromversorgung_notstrom",
-        "title": "Notstrom vorhanden",
-        "type": "boolean"
-      },
-      {
-        "name": "wasser_verfuegbar",
-        "title": "Wasser verfügbar",
-        "type": "boolean"
-      },
-      {
-        "name": "sanitaer_verfuegbar",
-        "title": "Sanitär verfügbar",
-        "type": "boolean"
-      },
-      {
-        "name": "betreiber",
-        "title": "Betreiber oder Zuständigkeit",
-        "type": "string"
-      },
-      {
-        "name": "ansprechpartner",
-        "title": "Ansprechstelle",
-        "type": "string"
-      },
-      {
-        "name": "letzte_pruefung",
-        "title": "Letzte Prüfung",
-        "type": "date",
-        "format": "default"
-      },
-      {
-        "name": "prioritaet",
-        "title": "Priorität",
-        "type": "string",
-        "constraints": {
-          "enum": ["hoch", "mittel", "niedrig"]
-        }
-      },
-      {
-        "name": "hinweis",
-        "title": "Hinweis",
-        "type": "string"
+  "fields": [
+    {
+      "name": "id",
+      "title": "Eindeutige Kennung",
+      "type": "string",
+      "constraints": {
+        "required": true
       }
-    ],
-    "primaryKey": "id"
-  }
+    },
+    {
+      "name": "name",
+      "title": "Anzeigename",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "typ",
+      "title": "Hauptkategorie",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "untertyp",
+      "title": "Feinerer Typ",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "title": "Betriebszustand",
+      "type": "string",
+      "constraints": {
+        "enum": [
+          "aktiv",
+          "eingeschränkt",
+          "außer Betrieb",
+          "geplant"
+        ]
+      }
+    },
+    {
+      "name": "kapazitaet_max",
+      "title": "Gesamtkapazität",
+      "type": "integer"
+    },
+    {
+      "name": "kapazitaet_verfuegbar",
+      "title": "Freie Kapazität",
+      "type": "integer"
+    },
+    {
+      "name": "auslastung_prozent",
+      "title": "Auslastung in Prozent",
+      "type": "integer"
+    },
+    {
+      "name": "strasse",
+      "title": "Straße und Hausnummer",
+      "type": "string"
+    },
+    {
+      "name": "plz",
+      "title": "Postleitzahl",
+      "type": "string"
+    },
+    {
+      "name": "ort",
+      "title": "Ort",
+      "type": "string"
+    },
+    {
+      "name": "stadtteil",
+      "title": "Stadtteil oder Bezirk",
+      "type": "string"
+    },
+    {
+      "name": "lat",
+      "title": "Breitengrad",
+      "type": "number"
+    },
+    {
+      "name": "lon",
+      "title": "Längengrad",
+      "type": "number"
+    },
+    {
+      "name": "barrierefrei",
+      "title": "Barrierefrei",
+      "type": "boolean"
+    },
+    {
+      "name": "stromversorgung_notstrom",
+      "title": "Notstrom vorhanden",
+      "type": "boolean"
+    },
+    {
+      "name": "wasser_verfuegbar",
+      "title": "Wasser verfügbar",
+      "type": "boolean"
+    },
+    {
+      "name": "sanitaer_verfuegbar",
+      "title": "Sanitär verfügbar",
+      "type": "boolean"
+    },
+    {
+      "name": "betreiber",
+      "title": "Betreiber oder Zuständigkeit",
+      "type": "string"
+    },
+    {
+      "name": "ansprechpartner",
+      "title": "Ansprechstelle",
+      "type": "string"
+    },
+    {
+      "name": "letzte_pruefung",
+      "title": "Letzte Prüfung",
+      "type": "date",
+      "format": "default"
+    },
+    {
+      "name": "prioritaet",
+      "title": "Priorität",
+      "type": "string",
+      "constraints": {
+        "enum": [
+          "hoch",
+          "mittel",
+          "niedrig"
+        ]
+      }
+    },
+    {
+      "name": "hinweis",
+      "title": "Hinweis",
+      "type": "string"
+    }
+  ],
+  "primaryKey": "id",
+  "missingValues": [
+    ""
+  ]
 }
