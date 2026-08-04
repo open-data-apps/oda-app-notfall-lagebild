@@ -30,7 +30,10 @@
     "Rathausplatz 1<br>",
     "73728 Musterstadt"
   ],
-  "datenschutz": "Die App verarbeitet ausschließlich offene oder demoartige Standortdaten ohne personenbezogene Detaildaten.",
+  "datenschutz": [
+    "Die App verarbeitet ausschließlich offene oder demoartige Standortdaten ohne personenbezogene Detaildaten.",
+    "<h3>Beim Aufruf kontaktierte Drittanbieter</h3><p>Beim Aufruf dieser App werden Bibliotheken bzw. Kartendienste von folgenden externen Servern geladen. Dabei werden IP-Adresse und User-Agent der Besucher:innen an diese Anbieter übertragen:</p><ul><li><strong>cdn.jsdelivr.net</strong> — Bootstrap (Layout- und UI-Framework), Chart.js (Diagramme)</li><li><strong>unpkg.com</strong> — Leaflet (Kartendarstellung), Leaflet MarkerCluster (Gruppierung von Kartenmarkern)</li><li><strong>tile.openstreetmap.org</strong> — Kartenkacheln (OpenStreetMap)</li></ul>"
+  ],
   "urlDaten": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7",
   "fusszeile": [
     "(C) Copyright 2026 | ",
