@@ -1319,8 +1319,8 @@ function loadScriptOnce(id, src, isLoaded) {
 }
 
 async function loadLeafletLibrary() {
-  await loadStyleOnce("nlb-leaflet-css", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
-  return loadScriptOnce("nlb-leaflet-js", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", () =>
+  await loadStyleOnce("nlb-leaflet-css", "vendor/leaflet/leaflet.css");
+  return loadScriptOnce("nlb-leaflet-js", "vendor/leaflet/leaflet.js", () =>
     typeof L !== "undefined"
   );
 }
@@ -1344,7 +1344,7 @@ async function loadMarkerClusterLibrary() {
 }
 
 function loadChartLibrary() {
-  return loadScriptOnce("nlb-chart-js", "https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js", () =>
+  return loadScriptOnce("nlb-chart-js", "vendor/chartjs/chart.umd.min.js", () =>
     typeof Chart !== "undefined"
   );
 }
