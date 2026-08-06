@@ -165,10 +165,9 @@ ausgeliefert.
 
 Beim Aufruf dieser App werden folgende externe Server kontaktiert:
 
-- `unpkg.com` — Leaflet MarkerCluster (Gruppierung von Kartenmarkern)
 - `tile.openstreetmap.org` — Kartenkacheln (OpenStreetMap)
 
-Diese Anbieter bleiben auch im Standalone-Betrieb extern; ein vollständig autarker Betrieb ohne Internetzugang ist derzeit nicht möglich. Bootstrap, Leaflet und Chart.js werden seit Version 1.8.0 lokal aus `app/vendor/` ausgeliefert und nicht mehr extern geladen.
+Diese Anbieter bleiben auch im Standalone-Betrieb extern; ein vollständig autarker Betrieb ohne Internetzugang ist derzeit nicht möglich. Bootstrap, Leaflet und Chart.js werden seit Version 1.8.0 und Leaflet MarkerCluster seit Version 1.11.0 lokal aus `app/vendor/` ausgeliefert und nicht mehr extern geladen.
 
 ### Auslieferung an den ODAS
 
