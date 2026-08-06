@@ -1330,15 +1330,15 @@ async function loadMarkerClusterLibrary() {
   if (!leafletLoaded) return false;
   await loadStyleOnce(
     "nlb-markercluster-css",
-    "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    "vendor/markercluster/MarkerCluster.css"
   );
   await loadStyleOnce(
     "nlb-markercluster-default-css",
-    "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    "vendor/markercluster/MarkerCluster.Default.css"
   );
   return loadScriptOnce(
     "nlb-markercluster-js",
-    "https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js",
+    "vendor/markercluster/leaflet.markercluster.js",
     () => typeof L !== "undefined" && Boolean(L.markerClusterGroup)
   );
 }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0 - 2026-08-06
+- FIX: Leaflet MarkerCluster vendored in `app/vendor/` statt von CDN geladen (Vendoring Teil 3) — Standalone-Betrieb laedt die Zusatzbibliotheken nicht mehr extern
+
 ## 1.10.0 - 2026-08-06
 - FIX: Base auf Template oda-generic 1.6.0 vereinheitlicht (Hook renderPageOverride)
 
