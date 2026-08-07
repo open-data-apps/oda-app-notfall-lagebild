@@ -1,3 +1,5 @@
+let nlbInstanzZaehler = 0;
+
 const NLB_STATUS = {
   active: "aktiv",
   restricted: "eingeschraenkt",
@@ -27,6 +29,7 @@ const NLB_DEFAULT_OVERDUE_AFTER_DAYS = 180;
 const NLB_ASSETS = {};
 
 function app(configdata = {}, enclosingHtmlDivElement) {
+  const nlbUid = "i" + ++nlbInstanzZaehler;
   const config = normalizeEmergencyConfig(configdata);
   const state = {
     config,
@@ -52,7 +55,7 @@ function app(configdata = {}, enclosingHtmlDivElement) {
     },
   };
 
-  enclosingHtmlDivElement.innerHTML = renderEmergencyShell(config);
+  enclosingHtmlDivElement.innerHTML = renderEmergencyShell(config, nlbUid);
   bindEmergencyShell(state);
   initializeEmergencyDashboard(state);
 }
@@ -72,7 +75,7 @@ function normalizeEmergencyConfig(configdata = {}) {
   return config;
 }
 
-function renderWeitereInfos(config = {}) {
+function renderWeitereInfos(config = {}, uid) {
   const links = String(config.weiterfuehrendeLinks || "").trim();
   if (!links) return "";
   return (
@@ -85,7 +88,7 @@ function renderWeitereInfos(config = {}) {
   );
 }
 
-function renderMethodikbox(config = {}) {
+function renderMethodikbox(config = {}, uid) {
   const hinweis = String(config.datenquelleHinweis || "").trim();
   const stand = String(config.datenStand || "").trim();
   if (!hinweis && !stand) return "";
@@ -94,11 +97,11 @@ function renderMethodikbox(config = {}) {
     : "";
   return (
     '<section class="nlb-section nlb-methodik">' +
-    '<button class="nlb-methodik-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-methodik-body" aria-expanded="false" aria-controls="nlb-methodik-body">' +
+    '<button class="nlb-methodik-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-methodik-body-' + uid + '" aria-expanded="false" aria-controls="nlb-methodik-body-' + uid + '">' +
     '<h3 class="mb-0">Methodik &amp; Datenquelle</h3>' +
     '<span class="nlb-methodik-chevron" aria-hidden="true">&#9662;</span>' +
     "</button>" +
-    '<div id="nlb-methodik-body" class="collapse">' +
+    '<div id="nlb-methodik-body-' + uid + '" class="collapse">' +
     standHtml +
     hinweis +
     "</div>" +
@@ -564,7 +567,7 @@ function normalizeBooleanFilter(value) {
   return null;
 }
 
-function renderEmergencyShell(config) {
+function renderEmergencyShell(config, uid) {
   return `
     <section class="nlb-app" aria-label="Notfall-Lagebild">
       <div class="nlb-toolbar">
@@ -583,11 +586,11 @@ function renderEmergencyShell(config) {
       <div class="nlb-loading" id="nlb-loading" aria-live="polite"></div>
 
       <div class="nlb-kpi-grid" id="nlb-kpis">
-        ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit", config.kpiKontext1)}
-        ${renderKpiCard("disrupted", "Gestörte Standorte", "0", "Eingeschränkt oder außer Betrieb", config.kpiKontext2)}
-        ${renderKpiCard("capacity", "Freie Gesamtkapazität", "0", "Verfügbare Plätze", config.kpiKontext3)}
-        ${renderKpiCard("underserved", "Unterversorgte Stadtteile", "0", "Aktive Standorte unter Schwelle", config.kpiKontext4)}
-        ${renderKpiCard("overdue", "Prüfungen überfällig", "0", "Älter als Grenzwert", config.kpiKontext5)}
+        ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit", config.kpiKontext1, uid)}
+        ${renderKpiCard("disrupted", "Gestörte Standorte", "0", "Eingeschränkt oder außer Betrieb", config.kpiKontext2, uid)}
+        ${renderKpiCard("capacity", "Freie Gesamtkapazität", "0", "Verfügbare Plätze", config.kpiKontext3, uid)}
+        ${renderKpiCard("underserved", "Unterversorgte Stadtteile", "0", "Aktive Standorte unter Schwelle", config.kpiKontext4, uid)}
+        ${renderKpiCard("overdue", "Prüfungen überfällig", "0", "Älter als Grenzwert", config.kpiKontext5, uid)}
       </div>
 
       <section class="nlb-filters" aria-label="Filter">
@@ -652,16 +655,16 @@ function renderEmergencyShell(config) {
         </div>
       </section>
 
-      ${renderMethodikbox(config)}
-      ${renderWeitereInfos(config)}
+      ${renderMethodikbox(config, uid)}
+      ${renderWeitereInfos(config, uid)}
     </section>
   `;
 }
 
-function renderKpiCard(id, label, value, hint, kontext) {
+function renderKpiCard(id, label, value, hint, kontext, uid) {
   const k = String(kontext || "").trim();
   const kontextHtml = k
-    ? `<button class="nlb-kpi-info-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-kpi-kontext-${id}" aria-expanded="false" aria-controls="nlb-kpi-kontext-${id}" aria-label="Erklärung zu diesem Wert"><span class="nlb-kpi-info-icon" aria-hidden="true">ⓘ</span></button><div id="nlb-kpi-kontext-${id}" class="collapse"><div class="nlb-kpi-kontext">${escapeHtml(k)}</div></div>`
+    ? `<button class="nlb-kpi-info-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-kpi-kontext-${id}-${uid}" aria-expanded="false" aria-controls="nlb-kpi-kontext-${id}-${uid}" aria-label="Erklärung zu diesem Wert"><span class="nlb-kpi-info-icon" aria-hidden="true">ⓘ</span></button><div id="nlb-kpi-kontext-${id}-${uid}" class="collapse"><div class="nlb-kpi-kontext">${escapeHtml(k)}</div></div>`
     : "";
   return `
     <div class="nlb-kpi-wrap">
