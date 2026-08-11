@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.0 - 2026-08-11
+- FIX: XSS- und URL-Vertrag geschlossen (F-35): neuer Top-Level-Helfer `safeHttpUrl`; der Datenquellen-Link in der Statuszeile wird nur noch bei gültigem http(s)-Schema gerendert, sonst nur escapter Text
+
 ## 1.15.0 - 2026-08-07
 - FIX: Bootstrap-Ziele instanzeindeutig machen (F-32)
 

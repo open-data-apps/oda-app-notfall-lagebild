@@ -850,10 +850,10 @@ function updateEmergencyStatusLine(state) {
     .filter(Boolean)
     .sort()
     .pop();
-  const apiurl = state.config.apiurl;
+  const apiurl = safeHttpUrl(state.config.apiurl);
   const apiurlHtml = apiurl
     ? `<a href="${escapeHtml(apiurl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(apiurl)}</a>`
-    : "-";
+    : state.config.apiurl ? escapeHtml(state.config.apiurl) : "-";
   const dateStr = maxDate ? formatDate(maxDate) : "nicht angegeben";
   statusElement.innerHTML = `Datenquelle: ${apiurlHtml} | ${state.allRecords.length.toLocaleString("de-DE")} Standorte | Datenstand: ${escapeHtml(dateStr)}`;
 
@@ -1291,6 +1291,11 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function safeHttpUrl(value) {
+  const s = String(value || "").trim();
+  return /^https?:\/\//i.test(s) ? s : "";
 }
 
 function loadStyleOnce(id, href) {
