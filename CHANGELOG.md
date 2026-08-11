@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.0 - 2026-08-11
+- FIX: Laufzeitressourcen beim Seitenwechsel freigeben (F-43): neuer `onPageLeave`-Hook entfernt Leaflet-Karte und Chart.js-Instanz und macht späte Async-Renders über ein `disposed`-Flag wirkungslos
+
 ## 1.16.0 - 2026-08-11
 - FIX: XSS- und URL-Vertrag geschlossen (F-35): neuer Top-Level-Helfer `safeHttpUrl`; der Datenquellen-Link in der Statuszeile wird nur noch bei gültigem http(s)-Schema gerendert, sonst nur escapter Text
 

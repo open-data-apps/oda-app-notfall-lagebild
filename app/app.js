@@ -28,6 +28,35 @@ const NLB_DEFAULT_MIN_ACTIVE_PER_DISTRICT = 1;
 const NLB_DEFAULT_OVERDUE_AFTER_DAYS = 180;
 const NLB_ASSETS = {};
 
+// F-43: Registrierte Instanzen (Container -> State), damit der Top-Level-Hook
+// onPageLeave() alle gemounteten Instanzen aufraeumen kann. Die Base ruft den
+// Hook global ohne Container-Parameter auf; eine iterierbare Map ist daher das
+// zur App passende Muster (Portfolio-Muster aus Task 9.1).
+const nlbInstances = new Map();
+
+function onPageLeave(page) {
+  nlbInstances.forEach((state, container) => {
+    state.disposed = true;
+    if (state.map) {
+      try {
+        state.map.remove();
+      } catch (error) {
+        console.warn("Fehler beim Entfernen der Leaflet-Karte:", error);
+      }
+      state.map = null;
+    }
+    if (state.chart) {
+      try {
+        state.chart.destroy();
+      } catch (error) {
+        console.warn("Fehler beim Zerstören des Charts:", error);
+      }
+      state.chart = null;
+    }
+    nlbInstances.delete(container);
+  });
+}
+
 function app(configdata = {}, enclosingHtmlDivElement) {
   const nlbUid = "i" + ++nlbInstanzZaehler;
   const config = normalizeEmergencyConfig(configdata);
@@ -53,7 +82,10 @@ function app(configdata = {}, enclosingHtmlDivElement) {
       markerCluster: false,
       chart: false,
     },
+    disposed: false,
   };
+
+  nlbInstances.set(enclosingHtmlDivElement, state);
 
   enclosingHtmlDivElement.innerHTML = renderEmergencyShell(config, nlbUid);
   bindEmergencyShell(state);
@@ -129,6 +161,7 @@ async function initializeEmergencyDashboard(state) {
 
   try {
     const [records] = await Promise.all([loadEmergencyRecords(state.config), ...libraryPromises]);
+    if (state.disposed) return;
     state.allRecords = records;
     state.mapCenter = deriveEmergencyMapCenter(records);
     populateEmergencyFilters(state);
@@ -136,6 +169,7 @@ async function initializeEmergencyDashboard(state) {
     showEmergencyAlert(state, "");
     updateEmergencyDashboard(state);
   } catch (error) {
+    if (state.disposed) return;
     console.error("Notfall-Lagebild konnte nicht geladen werden:", error);
     state.allRecords = [];
     populateEmergencyFilters(state);
