@@ -1,5 +1,9 @@
 # Changelog
 
+
+## 1.19.0 - 2026-08-12
+- FIX: `app/index.html` auf den Template-Stand (F-47): Datei byte-gleich aus `oda-generic` übernommen — gültiges HTML, deutsche ARIA-Labels, Footer im Body; Titel und Fußzeile bleiben Platzhalter und werden zur Laufzeit aus der Instanz-Config überschrieben
+
 ## 1.18.0 - 2026-08-12
 - FIX: Toten ID-Selektor `#nlb-methodik-body` auf Klassen-Selektor `.nlb-methodik-body` umgestellt — die Methodik-Box-Regeln greifen nach der instanzeindeutigen ID-Umstellung wieder (F-54)
 
