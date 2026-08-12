@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.0 - 2026-08-12
+- FIX: Toten ID-Selektor `#nlb-methodik-body` auf Klassen-Selektor `.nlb-methodik-body` umgestellt — die Methodik-Box-Regeln greifen nach der instanzeindeutigen ID-Umstellung wieder (F-54)
+
 ## 1.17.0 - 2026-08-11
 - FIX: Laufzeitressourcen beim Seitenwechsel freigeben (F-43): neuer `onPageLeave`-Hook entfernt Leaflet-Karte und Chart.js-Instanz und macht späte Async-Renders über ein `disposed`-Flag wirkungslos
 

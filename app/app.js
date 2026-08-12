@@ -133,7 +133,7 @@ function renderMethodikbox(config = {}, uid) {
     '<h3 class="mb-0">Methodik &amp; Datenquelle</h3>' +
     '<span class="nlb-methodik-chevron" aria-hidden="true">&#9662;</span>' +
     "</button>" +
-    '<div id="nlb-methodik-body-' + uid + '" class="collapse">' +
+    '<div id="nlb-methodik-body-' + uid + '" class="collapse nlb-methodik-body">' +
     standHtml +
     hinweis +
     "</div>" +

@@ -641,12 +641,12 @@
 .nlb-methodik-toggle[aria-expanded="true"] .nlb-methodik-chevron {
   transform: rotate(180deg);
 }
-.nlb-methodik #nlb-methodik-body {
+.nlb-methodik .nlb-methodik-body {
   border-top: 1px solid #eef2f6;
   padding: 1rem 1.25rem;
   color: #364a5e;
 }
-.nlb-methodik #nlb-methodik-body p:last-child {
+.nlb-methodik .nlb-methodik-body p:last-child {
   margin-bottom: 0;
 }
 .nlb-kpi-wrap {
