@@ -61,6 +61,7 @@ function app(configdata = {}, enclosingHtmlDivElement) {
   const nlbUid = "i" + ++nlbInstanzZaehler;
   const config = normalizeEmergencyConfig(configdata);
   const state = {
+    uid: nlbUid,
     config,
     host: enclosingHtmlDivElement,
     allRecords: [],
@@ -638,8 +639,8 @@ function renderEmergencyShell(config, uid) {
           ${renderFilterSelect("notstrom", "Notstrom")}
           ${renderFilterSelect("prioritaet", "Priorität")}
           <div class="col-12 col-lg-4">
-            <label class="form-label" for="nlb-filter-search">Suche</label>
-            <input class="form-control" id="nlb-filter-search" type="search" placeholder="Name, Adresse, Hinweis">
+            <label class="form-label" for="nlb-filter-search-${uid}">Suche</label>
+            <input class="form-control" id="nlb-filter-search-${uid}" type="search" placeholder="Name, Adresse, Hinweis">
           </div>
         </div>
         <div class="nlb-filter-note" id="nlb-filter-note"></div>
@@ -730,7 +731,7 @@ function bindEmergencyShell(state) {
     state.host.querySelectorAll(".nlb-filter").forEach((element) => {
       element.value = "";
     });
-    state.host.querySelector("#nlb-filter-search").value = "";
+    state.host.querySelector(`#nlb-filter-search-${state.uid}`).value = "";
     updateEmergencyDashboard(state);
   });
 
@@ -768,7 +769,7 @@ function bindEmergencyShell(state) {
     });
   });
 
-  state.host.querySelector("#nlb-filter-search").addEventListener("input", () => {
+  state.host.querySelector(`#nlb-filter-search-${state.uid}`).addEventListener("input", () => {
     state.quickFilter = "";
     state.page = 1;
     updateEmergencyDashboard(state);
@@ -837,7 +838,7 @@ function collectEmergencyFilters(state) {
   state.host.querySelectorAll(".nlb-filter").forEach((element) => {
     filters[element.dataset.filter] = element.value;
   });
-  filters.search = state.host.querySelector("#nlb-filter-search").value;
+  filters.search = state.host.querySelector(`#nlb-filter-search-${state.uid}`).value;
   return filters;
 }
 
