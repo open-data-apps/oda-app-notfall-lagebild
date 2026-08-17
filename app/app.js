@@ -630,20 +630,20 @@ function renderEmergencyShell(config, uid) {
 
       <section class="nlb-filters" aria-label="Filter">
         <div class="row g-3">
-          ${renderFilterSelect("typ", "Typ")}
-          ${renderFilterSelect("untertyp", "Untertyp")}
-          ${renderFilterSelect("status", "Status")}
-          ${renderFilterSelect("stadtteil", "Stadtteil")}
-          ${renderFilterSelect("betreiber", "Betreiber")}
-          ${renderFilterSelect("barrierefrei", "Barrierefrei")}
-          ${renderFilterSelect("notstrom", "Notstrom")}
-          ${renderFilterSelect("prioritaet", "Priorität")}
+          ${renderFilterSelect("typ", "Typ", uid)}
+          ${renderFilterSelect("untertyp", "Untertyp", uid)}
+          ${renderFilterSelect("status", "Status", uid)}
+          ${renderFilterSelect("stadtteil", "Stadtteil", uid)}
+          ${renderFilterSelect("betreiber", "Betreiber", uid)}
+          ${renderFilterSelect("barrierefrei", "Barrierefrei", uid)}
+          ${renderFilterSelect("notstrom", "Notstrom", uid)}
+          ${renderFilterSelect("prioritaet", "Priorität", uid)}
           <div class="col-12 col-lg-4">
             <label class="form-label" for="nlb-filter-search-${uid}">Suche</label>
             <input class="form-control" id="nlb-filter-search-${uid}" type="search" placeholder="Name, Adresse, Hinweis">
           </div>
         </div>
-        <div class="nlb-filter-note" id="nlb-filter-note"></div>
+        <div class="nlb-filter-note" id="nlb-filter-note-${uid}"></div>
       </section>
 
       <div class="row g-4 align-items-stretch">
@@ -705,7 +705,7 @@ function renderKpiCard(id, label, value, hint, kontext, uid) {
     <div class="nlb-kpi-wrap">
       <button type="button" class="nlb-kpi" data-quickfilter="${id}">
         <span>${label}</span>
-        <strong id="nlb-kpi-${id}">${value}</strong>
+        <strong id="nlb-kpi-${id}-${uid}">${value}</strong>
         <small>${hint}</small>
       </button>
       ${kontextHtml}
@@ -713,11 +713,11 @@ function renderKpiCard(id, label, value, hint, kontext, uid) {
   `;
 }
 
-function renderFilterSelect(id, label) {
+function renderFilterSelect(id, label, uid) {
   return `
     <div class="col-12 col-md-6 col-lg-3">
-      <label class="form-label" for="nlb-filter-${id}">${label}</label>
-      <select class="form-select nlb-filter" id="nlb-filter-${id}" data-filter="${id}">
+      <label class="form-label" for="nlb-filter-${id}-${uid}">${label}</label>
+      <select class="form-select nlb-filter" id="nlb-filter-${id}-${uid}" data-filter="${id}">
         <option value="">Alle</option>
       </select>
     </div>
@@ -798,7 +798,7 @@ function populateEmergencyFilters(state) {
 }
 
 function setSelectOptions(state, id, values) {
-  const select = state.host.querySelector(`#nlb-filter-${id}`);
+  const select = state.host.querySelector(`#nlb-filter-${id}-${state.uid}`);
   const currentValue = select.value;
   const entries = values
     .filter((value) => {
@@ -892,7 +892,7 @@ function updateEmergencyStatusLine(state) {
   const dateStr = maxDate ? formatDate(maxDate) : "nicht angegeben";
   statusElement.innerHTML = `Datenquelle: ${apiurlHtml} | ${state.allRecords.length.toLocaleString("de-DE")} Standorte | Datenstand: ${escapeHtml(dateStr)}`;
 
-  const note = state.host.querySelector("#nlb-filter-note");
+  const note = state.host.querySelector(`#nlb-filter-note-${state.uid}`);
   note.textContent = state.quickFilter
     ? `Schnellfilter aktiv: ${quickFilterLabel(state.quickFilter)}`
     : "Alle Filter wirken gleichzeitig auf Kennzahlen, Karte, Diagramm und Tabelle.";
@@ -916,11 +916,11 @@ function renderEmergencyKpis(state) {
     referenceDate: new Date(),
   });
 
-  setText(state, "nlb-kpi-active", metrics.activeLocations.toLocaleString("de-DE"));
-  setText(state, "nlb-kpi-disrupted", metrics.disruptedLocations.toLocaleString("de-DE"));
-  setText(state, "nlb-kpi-capacity", metrics.freeCapacity.toLocaleString("de-DE"));
-  setText(state, "nlb-kpi-underserved", metrics.underservedDistricts.toLocaleString("de-DE"));
-  setText(state, "nlb-kpi-overdue", metrics.overdueChecks.toLocaleString("de-DE"));
+  setText(state, `nlb-kpi-active-${state.uid}`, metrics.activeLocations.toLocaleString("de-DE"));
+  setText(state, `nlb-kpi-disrupted-${state.uid}`, metrics.disruptedLocations.toLocaleString("de-DE"));
+  setText(state, `nlb-kpi-capacity-${state.uid}`, metrics.freeCapacity.toLocaleString("de-DE"));
+  setText(state, `nlb-kpi-underserved-${state.uid}`, metrics.underservedDistricts.toLocaleString("de-DE"));
+  setText(state, `nlb-kpi-overdue-${state.uid}`, metrics.overdueChecks.toLocaleString("de-DE"));
 
   state.host.querySelectorAll(".nlb-kpi").forEach((element) => {
     element.classList.toggle("active", element.dataset.quickfilter === state.quickFilter);

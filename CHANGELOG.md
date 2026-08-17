@@ -1,6 +1,9 @@
 # Changelog
 
 
+## 1.20.0 - 2026-08-17
+- FIX: F-60-Restklasse geschlossen: `nlb-filter-<name>`/`for=`-Paare sowie `nlb-filter-note` und `nlb-kpi-<name>` waren bei Welle U (F-60) noch nicht instanzscoped — zwei Instanzen auf derselben Seite hätten sich per nativer `label[for]`-Auflösung gegenseitig fokussiert. Alle vier Muster tragen jetzt das `-${uid}`-Suffix wie die übrigen Instanz-Hooks.
+
 ## 1.19.0 - 2026-08-12
 - FIX: `app/index.html` auf den Template-Stand (F-47): Datei byte-gleich aus `oda-generic` übernommen — gültiges HTML, deutsche ARIA-Labels, Footer im Body; Titel und Fußzeile bleiben Platzhalter und werden zur Laufzeit aus der Instanz-Config überschrieben
 
