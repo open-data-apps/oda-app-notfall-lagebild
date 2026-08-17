@@ -1,6 +1,9 @@
 # Changelog
 
 
+## 1.21.0 - 2026-08-17
+- **CHG:** `instanz-config`-`category`-Vokabular auf Deutsch umgestellt (`allgemein`, `beschreibung`, `datenherkunft`, `kontakt-rechtliches`, `sonstiges`); die entfallenen Kategorien `metrics` und `advanced` wurden auf `beschreibung` bzw. `sonstiges` verteilt
+
 ## 1.20.0 - 2026-08-17
 - FIX: F-60-Restklasse geschlossen: `nlb-filter-<name>`/`for=`-Paare sowie `nlb-filter-note` und `nlb-kpi-<name>` waren bei Welle U (F-60) noch nicht instanzscoped — zwei Instanzen auf derselben Seite hätten sich per nativer `label[for]`-Auflösung gegenseitig fokussiert. Alle vier Muster tragen jetzt das `-${uid}`-Suffix wie die übrigen Instanz-Hooks.
 
