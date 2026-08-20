@@ -202,9 +202,8 @@ async function loadEmergencyRecords(config) {
   }
 
   const rawText = await fetchEmergencyText(config.apiurl, config);
-  const records = parseEmergencyData(rawText).map((record, index) =>
-    normalizeEmergencyRecord(record, index)
-  );
+  const rawRecords = await parseEmergencyData(rawText);
+  const records = rawRecords.map((record, index) => normalizeEmergencyRecord(record, index));
 
   return records;
 }
@@ -309,7 +308,7 @@ function describeNonJsonPayload(rawContent) {
   return "unlesbaren Inhalt";
 }
 
-function parseEmergencyData(rawText) {
+async function parseEmergencyData(rawText) {
   const trimmed = String(rawText || "").trim();
   if (!trimmed) return [];
 
@@ -318,6 +317,7 @@ function parseEmergencyData(rawText) {
     return extractEmergencyRecords(json);
   }
 
+  await loadPapaparseLibrary();
   return parseEmergencyCsv(trimmed);
 }
 
@@ -344,45 +344,8 @@ function extractEmergencyRecords(json) {
 }
 
 function parseEmergencyCsv(csvText) {
-  const lines = csvText.split(/\r?\n/).filter((line) => line.trim().length > 0);
-  if (lines.length < 2) return [];
-
-  const delimiter = lines[0].includes(";") ? ";" : ",";
-  const headers = splitCsvLine(lines[0], delimiter).map((header) => header.trim());
-
-  return lines.slice(1).map((line) => {
-    const values = splitCsvLine(line, delimiter);
-    return headers.reduce((record, header, index) => {
-      record[header] = values[index] || "";
-      return record;
-    }, {});
-  });
-}
-
-function splitCsvLine(line, delimiter) {
-  const values = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const next = line[index + 1];
-
-    if (char === '"' && next === '"') {
-      current += '"';
-      index += 1;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === delimiter && !inQuotes) {
-      values.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  values.push(current);
-  return values;
+  const result = Papa.parse(csvText, { header: true, skipEmptyLines: "greedy" });
+  return Array.isArray(result.data) ? result.data : [];
 }
 
 function normalizeEmergencyRecord(rawRecord = {}, index = 0) {
@@ -637,17 +600,17 @@ function renderEmergencyShell(config, uid) {
           <p class="nlb-eyebrow mb-1">Kommunales Lagebild</p>
           <h2 class="mb-2">${escapeHtml(config.titel)}</h2>
           <p class="nlb-lead mb-0">${escapeHtml(config.description)}</p>
-          <p class="text-muted small mt-2 mb-0" id="nlb-data-status">Datenstand wird geladen ...</p>
+          <p class="text-muted small mt-2 mb-0" id="nlb-data-status-${uid}">Datenstand wird geladen ...</p>
         </div>
         <div class="nlb-toolbar-actions">
-          <button type="button" class="btn btn-outline-secondary" id="nlb-reset-filters">Filter zurücksetzen</button>
+          <button type="button" class="btn btn-outline-secondary" id="nlb-reset-filters-${uid}">Filter zurücksetzen</button>
         </div>
       </div>
 
-      <div class="alert alert-warning d-none" id="nlb-alert" role="alert"></div>
-      <div class="nlb-loading" id="nlb-loading" aria-live="polite"></div>
+      <div class="alert alert-warning d-none" id="nlb-alert-${uid}" role="alert"></div>
+      <div class="nlb-loading" id="nlb-loading-${uid}" aria-live="polite"></div>
 
-      <div class="nlb-kpi-grid" id="nlb-kpis">
+      <div class="nlb-kpi-grid" id="nlb-kpis-${uid}">
         ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit", config.kpiKontext1, uid)}
         ${renderKpiCard("disrupted", "Gestörte Standorte", "0", "Eingeschränkt oder außer Betrieb", config.kpiKontext2, uid)}
         ${renderKpiCard("capacity", "Freie Gesamtkapazität", "0", "Verfügbare Plätze", config.kpiKontext3, uid)}
@@ -679,12 +642,12 @@ function renderEmergencyShell(config, uid) {
             <div class="nlb-panel-head">
               <h3>Karte</h3>
               <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-zoom-results">Treffer zentrieren</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-toggle-radius">1 km Radius</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-zoom-results-${uid}">Treffer zentrieren</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-toggle-radius-${uid}">1 km Radius</button>
               </div>
             </div>
-            <div id="nlb-map" class="nlb-map" role="application" aria-label="Standortkarte"></div>
-            <div class="nlb-map-legend" id="nlb-map-legend"></div>
+            <div id="nlb-map-${uid}" class="nlb-map" role="application" aria-label="Standortkarte"></div>
+            <div class="nlb-map-legend" id="nlb-map-legend-${uid}"></div>
           </section>
         </div>
         <div class="col-12 col-xl-4">
@@ -692,8 +655,8 @@ function renderEmergencyShell(config, uid) {
             <div class="nlb-panel-head">
               <h3>Standorte nach Typ</h3>
             </div>
-            <div class="nlb-chart-wrap" id="nlb-chart-wrap">
-              <canvas id="nlb-type-chart"></canvas>
+            <div class="nlb-chart-wrap" id="nlb-chart-wrap-${uid}">
+              <canvas id="nlb-type-chart-${uid}"></canvas>
             </div>
           </section>
         </div>
@@ -702,18 +665,18 @@ function renderEmergencyShell(config, uid) {
       <section class="nlb-panel mt-4" aria-label="Tabelle">
         <div class="nlb-panel-head">
           <h3>Operative Standortliste</h3>
-          <span class="nlb-result-count" id="nlb-result-count">0 Treffer</span>
+          <span class="nlb-result-count" id="nlb-result-count-${uid}">0 Treffer</span>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle nlb-table">
-            <thead id="nlb-table-head"></thead>
-            <tbody id="nlb-table-body"></tbody>
+            <thead id="nlb-table-head-${uid}"></thead>
+            <tbody id="nlb-table-body-${uid}"></tbody>
           </table>
         </div>
         <div class="nlb-pagination">
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page">Zurück</button>
-          <span id="nlb-page-info">Seite 1 von 1</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-next-page">Weiter</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page-${uid}">Zurück</button>
+          <span id="nlb-page-info-${uid}">Seite 1 von 1</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-next-page-${uid}">Weiter</button>
         </div>
       </section>
 
@@ -752,7 +715,7 @@ function renderFilterSelect(id, label, uid) {
 }
 
 function bindEmergencyShell(state) {
-  state.host.querySelector("#nlb-reset-filters").addEventListener("click", () => {
+  state.host.querySelector(`#nlb-reset-filters-${state.uid}`).addEventListener("click", () => {
     state.quickFilter = "";
     state.page = 1;
     state.host.querySelectorAll(".nlb-filter").forEach((element) => {
@@ -762,19 +725,19 @@ function bindEmergencyShell(state) {
     updateEmergencyDashboard(state);
   });
 
-  state.host.querySelector("#nlb-zoom-results").addEventListener("click", () => fitEmergencyMap(state));
-  state.host.querySelector("#nlb-toggle-radius").addEventListener("click", () => {
+  state.host.querySelector(`#nlb-zoom-results-${state.uid}`).addEventListener("click", () => fitEmergencyMap(state));
+  state.host.querySelector(`#nlb-toggle-radius-${state.uid}`).addEventListener("click", () => {
     state.showRadius = !state.showRadius;
-    state.host.querySelector("#nlb-toggle-radius").classList.toggle("active", state.showRadius);
+    state.host.querySelector(`#nlb-toggle-radius-${state.uid}`).classList.toggle("active", state.showRadius);
     updateEmergencyMap(state);
   });
 
-  state.host.querySelector("#nlb-prev-page").addEventListener("click", () => {
+  state.host.querySelector(`#nlb-prev-page-${state.uid}`).addEventListener("click", () => {
     state.page = Math.max(1, state.page - 1);
     renderEmergencyTable(state);
   });
 
-  state.host.querySelector("#nlb-next-page").addEventListener("click", () => {
+  state.host.querySelector(`#nlb-next-page-${state.uid}`).addEventListener("click", () => {
     const maxPage = Math.max(1, Math.ceil(state.filteredRecords.length / state.pageSize));
     state.page = Math.min(maxPage, state.page + 1);
     renderEmergencyTable(state);
@@ -906,7 +869,7 @@ function findUnderservedDistricts(records, minActivePerDistrict) {
 }
 
 function updateEmergencyStatusLine(state) {
-  const statusElement = state.host.querySelector("#nlb-data-status");
+  const statusElement = state.host.querySelector(`#nlb-data-status-${state.uid}`);
   const maxDate = state.allRecords
     .map((record) => record.letzte_pruefung)
     .filter(Boolean)
@@ -960,7 +923,7 @@ function setText(state, id, text) {
 }
 
 function renderEmergencyLegend(state) {
-  const legend = state.host.querySelector("#nlb-map-legend");
+  const legend = state.host.querySelector(`#nlb-map-legend-${state.uid}`);
   legend.innerHTML = Object.values(NLB_STATUS)
     .map(
       (status) =>
@@ -972,7 +935,7 @@ function renderEmergencyLegend(state) {
 }
 
 function updateEmergencyMap(state) {
-  const mapElement = state.host.querySelector("#nlb-map");
+  const mapElement = state.host.querySelector(`#nlb-map-${state.uid}`);
   if (!state.libraryState.leaflet || typeof L === "undefined") {
     renderFallbackEmergencyMap(state, mapElement);
     return;
@@ -1060,17 +1023,17 @@ function fitEmergencyMap(state) {
 }
 
 function updateEmergencyChart(state) {
-  const chartWrap = state.host.querySelector("#nlb-chart-wrap");
+  const chartWrap = state.host.querySelector(`#nlb-chart-wrap-${state.uid}`);
   if (!state.libraryState.chart || typeof Chart === "undefined") {
     renderFallbackEmergencyChart(state, chartWrap);
     return;
   }
 
-  if (!state.host.querySelector("#nlb-type-chart")) {
-    chartWrap.innerHTML = `<canvas id="nlb-type-chart"></canvas>`;
+  if (!state.host.querySelector(`#nlb-type-chart-${state.uid}`)) {
+    chartWrap.innerHTML = `<canvas id="nlb-type-chart-${state.uid}"></canvas>`;
   }
 
-  const canvas = state.host.querySelector("#nlb-type-chart");
+  const canvas = state.host.querySelector(`#nlb-type-chart-${state.uid}`);
 
   const byType = aggregateByKey(state.filteredRecords, "typ");
   const labels = Object.keys(byType).sort((a, b) => byType[b] - byType[a]).slice(0, 10);
@@ -1211,14 +1174,14 @@ function renderEmergencyTable(state) {
   const start = (state.page - 1) * state.pageSize;
   const pageRows = state.filteredRecords.slice(start, start + state.pageSize);
 
-  state.host.querySelector("#nlb-table-head").innerHTML = `<tr>${columns
+  state.host.querySelector(`#nlb-table-head-${state.uid}`).innerHTML = `<tr>${columns
     .map(([key, label]) => {
       const active = state.sortKey === key ? ` aria-sort="${state.sortDirection === "asc" ? "ascending" : "descending"}"` : "";
       return `<th scope="col"${active}><button type="button" class="nlb-sort" data-sort="${key}">${label}</button></th>`;
     })
     .join("")}</tr>`;
 
-  state.host.querySelector("#nlb-table-body").innerHTML =
+  state.host.querySelector(`#nlb-table-body-${state.uid}`).innerHTML =
     pageRows
       .map(
         (record) => `
@@ -1254,16 +1217,16 @@ function renderEmergencyTable(state) {
     });
   });
 
-  state.host.querySelectorAll("#nlb-table-body tr[data-record-id]").forEach((row) => {
+  state.host.querySelectorAll(`#nlb-table-body-${state.uid} tr[data-record-id]`).forEach((row) => {
     row.addEventListener("click", () => focusEmergencyRecord(state, row.dataset.recordId));
   });
 
-  state.host.querySelector("#nlb-result-count").textContent = `${state.filteredRecords.length.toLocaleString(
+  state.host.querySelector(`#nlb-result-count-${state.uid}`).textContent = `${state.filteredRecords.length.toLocaleString(
     "de-DE"
   )} Treffer`;
-  state.host.querySelector("#nlb-page-info").textContent = `Seite ${state.page} von ${maxPage}`;
-  state.host.querySelector("#nlb-prev-page").disabled = state.page <= 1;
-  state.host.querySelector("#nlb-next-page").disabled = state.page >= maxPage;
+  state.host.querySelector(`#nlb-page-info-${state.uid}`).textContent = `Seite ${state.page} von ${maxPage}`;
+  state.host.querySelector(`#nlb-prev-page-${state.uid}`).disabled = state.page <= 1;
+  state.host.querySelector(`#nlb-next-page-${state.uid}`).disabled = state.page >= maxPage;
 }
 
 function sortEmergencyRecords(records, key, direction) {
@@ -1307,13 +1270,13 @@ function typeInitial(type) {
 }
 
 function setEmergencyLoading(state, message) {
-  const element = state.host.querySelector("#nlb-loading");
+  const element = state.host.querySelector(`#nlb-loading-${state.uid}`);
   element.textContent = message;
   element.classList.toggle("d-none", !message);
 }
 
 function showEmergencyAlert(state, message, type = "danger") {
-  const element = state.host.querySelector("#nlb-alert");
+  const element = state.host.querySelector(`#nlb-alert-${state.uid}`);
   if (!element) return;
   element.textContent = message;
   element.className = `alert alert-${type} ${message ? "" : "d-none"}`;
@@ -1417,6 +1380,12 @@ async function loadMarkerClusterLibrary() {
 function loadChartLibrary() {
   return loadScriptOnce("nlb-chart-js", "vendor/chartjs/chart.umd.min.js", () =>
     typeof Chart !== "undefined"
+  );
+}
+
+function loadPapaparseLibrary() {
+  return loadScriptOnce("nlb-papaparse-js", "vendor/papaparse/papaparse.min.js", () =>
+    typeof Papa !== "undefined"
   );
 }
 
