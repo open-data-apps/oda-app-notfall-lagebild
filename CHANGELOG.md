@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 1.23.0 - 2026-08-20
+- FIX: Generierte IDs (`nlb-*`) tragen jetzt durchgängig die Instanzkennung, bislang nur 5 von 24 (F-71)
+- FIX: Eigenimplementierter CSV-Parser durch vendorte PapaParse ersetzt (F-72)
+
 ## 1.22.0 - 2026-08-17
 - `fetchOdasJson()` wirft jetzt bei nicht-JSON-Antworten (CSV, HTML, leerer Body) eine sprechende Konfigurationsfehlermeldung statt der rohen `JSON.parse`-Parserfehlermeldung (F-66)
 
