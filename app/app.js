@@ -143,6 +143,14 @@ function renderMethodikbox(config = {}, uid) {
 }
 
 async function initializeEmergencyDashboard(state) {
+  const quelle = String(state.config.apiurl || "").trim();
+  if (!quelle || /^\{\{.*\}\}$/.test(quelle) || /^<.*>$/.test(quelle)) {
+    setEmergencyLoading(state, "");
+    showEmergencyAlert(state, "Es ist keine Datenquelle konfiguriert.", "info");
+    updateEmergencyDashboard(state);
+    return;
+  }
+
   setEmergencyLoading(state, "Daten und Kartenbibliotheken werden geladen ...");
 
   const libraryPromises =
@@ -167,7 +175,11 @@ async function initializeEmergencyDashboard(state) {
     state.mapCenter = deriveEmergencyMapCenter(records);
     populateEmergencyFilters(state);
     setEmergencyLoading(state, "");
-    showEmergencyAlert(state, "");
+    if (records.length === 0) {
+      showEmergencyAlert(state, "Keine Datensätze in der Datenquelle gefunden.", "info");
+    } else {
+      showEmergencyAlert(state, "");
+    }
     updateEmergencyDashboard(state);
   } catch (error) {
     if (state.disposed) return;
@@ -176,7 +188,8 @@ async function initializeEmergencyDashboard(state) {
     populateEmergencyFilters(state);
     showEmergencyAlert(
       state,
-      `Die konfigurierte Datenquelle konnte nicht geladen werden: ${error.message || "Unbekannter Fehler"}`
+      `Fehler beim Laden der Daten: ${error.message || "Unbekannter Fehler"}`,
+      "danger"
     );
     setEmergencyLoading(state, "");
     updateEmergencyDashboard(state);
@@ -185,17 +198,13 @@ async function initializeEmergencyDashboard(state) {
 
 async function loadEmergencyRecords(config) {
   if (!config.apiurl) {
-    throw new Error("Keine Datenquelle konfiguriert (apiurl fehlt).");
+    return [];
   }
 
   const rawText = await fetchEmergencyText(config.apiurl, config);
   const records = parseEmergencyData(rawText).map((record, index) =>
     normalizeEmergencyRecord(record, index)
   );
-
-  if (!records.length) {
-    throw new Error("Die Datenquelle enthält keine verwertbaren Datensätze.");
-  }
 
   return records;
 }
@@ -1303,10 +1312,11 @@ function setEmergencyLoading(state, message) {
   element.classList.toggle("d-none", !message);
 }
 
-function showEmergencyAlert(state, message) {
+function showEmergencyAlert(state, message, type = "danger") {
   const element = state.host.querySelector("#nlb-alert");
+  if (!element) return;
   element.textContent = message;
-  element.classList.toggle("d-none", !message);
+  element.className = `alert alert-${type} ${message ? "" : "d-none"}`;
 }
 
 function formatBoolean(value) {
