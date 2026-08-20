@@ -3,26 +3,41 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
   "kurzbeschreibung": "Operatives Lagebild für kommunale Notfall-Infrastruktur, Status, Kapazitäten und räumliche Versorgung.",
   "beschreibung": [
     "_multiline_",
-    "<p>Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur, Statusinformationen und Kapazitäten in einer gemeinsamen Übersicht.</p>",
-    "<p>Die App hilft dabei, räumliche Versorgung und verfügbare Standorte schneller einzuordnen.</p>",
-    "<h3>Inhalte</h3>",
-    "<p>Die App verarbeitet Standorte mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.</p>",
-    "<p>Karte, Kennzahlen, Filter und Detailansichten unterstützen den operativen Überblick.</p>",
-    "<h3>Nutzung</h3>",
-    "<p>Filtern Sie nach Typ, Status oder Bereich und öffnen Sie einzelne Standorte für Detailinformationen. Die App unterstützt die Orientierung, ersetzt aber keine amtlichen Einsatz- oder Krisenentscheidungen.</p>",
-    "<h3>Für wen ist diese App?</h3>",
-    "<p>Die App richtet sich an Verwaltung, Krisenstäbe, Hilfsorganisationen und Bürger:innen, die Notfall-Infrastruktur verständlich betrachten möchten. Besondere Datenkenntnisse sind für die Nutzung nicht erforderlich.</p>",
-    "<h3>Datenquelle</h3>",
-    "<p>Die Daten werden aus einer konfigurierten JSON-Ressource mit Standort- und Lageinformationen geladen.</p>",
-    "<ul><li><strong>Open Data Portal:</strong> <a href=\"https://open-data-musterstadt.ckan.de\" target=\"_blank\" rel=\"noopener\">Open Data Musterstadt</a></li><li><strong>Datensatz/Ressource:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7\" target=\"_blank\" rel=\"noopener\">Notfall-Lagebild-Ressource</a></li><li><strong>Download:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json\" target=\"_blank\" rel=\"noopener\">JSON-Demoressource</a></li></ul>",
-    "<h3>Open Data App Store</h3>",
-    "<p>Diese App ist für den Open Data App Store vorbereitet und kann mit kommunalen Notfall-, Standort- oder Lagebilddaten betrieben werden.</p>"
+    "Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur mit Status, Kapazitäten und Prüfdaten in einer gemeinsamen Übersicht.",
+    "",
+    "Die App nutzt offene Standortdaten aus einer konfigurierten JSON- oder CSV-Quelle und macht Verfügbarkeit und räumliche Versorgung über Kennzahlen, Karte, Diagramm und Filter nachvollziehbar. Sie unterstützt die Orientierung und ersetzt keine amtlichen Einsatz- oder Krisenentscheidungen.",
+    "",
+    "## Methodik",
+    "",
+    "Die App ruft die konfigurierte Datenquelle (`apiurl`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+    "",
+    "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
+    "",
+    "Aus den gelieferten Attributen berechnet die App Status-, Kapazitäts- und Überfälligkeits-Kennzahlen – aktive und gestörte Standorte, freie Gesamtkapazität, unterversorgte Stadtteile (Mindestanzahl aktiver Standorte je Stadtteil) und überfällige Prüfungen (Grenzwert in Tagen). Karte, Diagramm und sortierbare, paginierte Tabelle werden daraus gespeist; welche Attribute tatsächlich vorhanden sind, hängt von der Quelle ab.",
+    "",
+    "## Datenquelle",
+    "",
+    "Die Daten werden aus einer konfigurierten JSON- oder CSV-Ressource mit Standort- und Lageinformationen bereitgestellt.",
+    "",
+    "- **Open Data Portal:** [Open Data Musterstadt](https://open-data-musterstadt.ckan.de)",
+    "- **Datensatz/Ressource:** [Notfall-Lagebild-Ressource](https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7)",
+    "- **Download/API-Endpunkt:** [JSON-Demoressource](https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json)",
+    "",
+    "Angezeigt werden die in der Quelle vorhandenen Standorte; Vollständigkeit und Aktualität hängen vom Pflegestand der Quelle ab.",
+    "",
+    "## Open Data App",
+    "",
+    "Diese App ist eine Open Data App und kann im [Open Data App Store](https://open-data-app-store.de/) betrieben werden. Sie ist Open Source und lässt sich mit kommunalen Notfall-, Standort- oder Lagebilddaten betreiben.",
+    "",
+    "- [Open Data App Store](https://open-data-app-store.de/) – die Plattform für Open Data Apps",
+    "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps) – die Organisation mit allen Apps",
+    "- [oda-app-notfall-lagebild](https://github.com/open-data-apps/oda-app-notfall-lagebild) – das Repository dieser App"
   ],
   "tags-funktion": [
     "Karte",
@@ -98,7 +113,8 @@
       "default": [
         "_multiline_",
         "Fachlicher Kontakt: Amt für Bevölkerungsschutz",
-        "E-Mail: <a href='mailto:{{odp.anbieter.email}}'>{{odp.anbieter.email}}</a>"
+        "",
+        "- E-Mail: [{{odp.anbieter.email}}](mailto:{{odp.anbieter.email}})"
       ],
       "erforderlich": "ja"
     },
@@ -111,20 +127,35 @@
       },
       "default": [
         "_multiline_",
-        "<p>Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur, Statusinformationen und Kapazitäten in einer gemeinsamen Übersicht.</p>",
-        "<p>Die App hilft dabei, räumliche Versorgung und verfügbare Standorte schneller einzuordnen.</p>",
-        "<h3>Inhalte</h3>",
-        "<p>Die App verarbeitet Standorte mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.</p>",
-        "<p>Karte, Kennzahlen, Filter und Detailansichten unterstützen den operativen Überblick.</p>",
-        "<h3>Nutzung</h3>",
-        "<p>Filtern Sie nach Typ, Status oder Bereich und öffnen Sie einzelne Standorte für Detailinformationen. Die App unterstützt die Orientierung, ersetzt aber keine amtlichen Einsatz- oder Krisenentscheidungen.</p>",
-        "<h3>Für wen ist diese App?</h3>",
-        "<p>Die App richtet sich an Verwaltung, Krisenstäbe, Hilfsorganisationen und Bürger:innen, die Notfall-Infrastruktur verständlich betrachten möchten. Besondere Datenkenntnisse sind für die Nutzung nicht erforderlich.</p>",
-        "<h3>Datenquelle</h3>",
-        "<p>Die Daten werden aus einer konfigurierten JSON-Ressource mit Standort- und Lageinformationen geladen.</p>",
-        "<ul><li><strong>Open Data Portal:</strong> <a href=\"https://open-data-musterstadt.ckan.de\" target=\"_blank\" rel=\"noopener\">Open Data Musterstadt</a></li><li><strong>Datensatz/Ressource:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7\" target=\"_blank\" rel=\"noopener\">Notfall-Lagebild-Ressource</a></li><li><strong>Download:</strong> <a href=\"https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json\" target=\"_blank\" rel=\"noopener\">JSON-Demoressource</a></li></ul>",
-        "<h3>Open Data App Store</h3>",
-        "<p>Diese App ist für den Open Data App Store vorbereitet und kann mit kommunalen Notfall-, Standort- oder Lagebilddaten betrieben werden.</p>"
+        "Das Notfall-Lagebild zeigt kommunale Notfall-Infrastruktur mit Status, Kapazitäten und Prüfdaten in einer gemeinsamen Übersicht.",
+        "",
+        "Die App nutzt offene Standortdaten aus einer konfigurierten JSON- oder CSV-Quelle und macht Verfügbarkeit und räumliche Versorgung über Kennzahlen, Karte, Diagramm und Filter nachvollziehbar. Sie unterstützt die Orientierung und ersetzt keine amtlichen Einsatz- oder Krisenentscheidungen.",
+        "",
+        "## Methodik",
+        "",
+        "Die App ruft die konfigurierte Datenquelle (`apiurl`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+        "",
+        "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
+        "",
+        "Aus den gelieferten Attributen berechnet die App Status-, Kapazitäts- und Überfälligkeits-Kennzahlen – aktive und gestörte Standorte, freie Gesamtkapazität, unterversorgte Stadtteile (Mindestanzahl aktiver Standorte je Stadtteil) und überfällige Prüfungen (Grenzwert in Tagen). Karte, Diagramm und sortierbare, paginierte Tabelle werden daraus gespeist; welche Attribute tatsächlich vorhanden sind, hängt von der Quelle ab.",
+        "",
+        "## Datenquelle",
+        "",
+        "Die Daten werden aus einer konfigurierten JSON- oder CSV-Ressource mit Standort- und Lageinformationen bereitgestellt.",
+        "",
+        "- **Open Data Portal:** [Open Data Musterstadt](https://open-data-musterstadt.ckan.de)",
+        "- **Datensatz/Ressource:** [Notfall-Lagebild-Ressource](https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7)",
+        "- **Download/API-Endpunkt:** [JSON-Demoressource](https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json)",
+        "",
+        "Angezeigt werden die in der Quelle vorhandenen Standorte; Vollständigkeit und Aktualität hängen vom Pflegestand der Quelle ab.",
+        "",
+        "## Open Data App",
+        "",
+        "Diese App ist eine Open Data App und kann im [Open Data App Store](https://open-data-app-store.de/) betrieben werden. Sie ist Open Source und lässt sich mit kommunalen Notfall-, Standort- oder Lagebilddaten betreiben.",
+        "",
+        "- [Open Data App Store](https://open-data-app-store.de/) – die Plattform für Open Data Apps",
+        "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps) – die Organisation mit allen Apps",
+        "- [oda-app-notfall-lagebild](https://github.com/open-data-apps/oda-app-notfall-lagebild) – das Repository dieser App"
       ],
       "erforderlich": "ja"
     },
@@ -137,8 +168,15 @@
       },
       "default": [
         "_multiline_",
-        "<h4>Anbieter</h4>",
-        "<p>{{{odp.anbieter.orgName}}}<br>{{{odp.anbieter.orgUnit}}}<br>{{odp.anbieter.strasse}}<br>{{odp.anbieter.plzort}}<br>Website: <a href='{{odp.anbieter.url-extern}}' target='_blank'>{{odp.anbieter.url-extern}}</a></p>"
+        "## Anbieter",
+        "",
+        "{{{odp.anbieter.orgName}}}  ",
+        "{{{odp.anbieter.orgUnit}}}",
+        "",
+        "{{odp.anbieter.strasse}}  ",
+        "{{odp.anbieter.plzort}}",
+        "",
+        "Website: [{{odp.anbieter.url-extern}}]({{odp.anbieter.url-extern}})"
       ],
       "erforderlich": "ja"
     },
@@ -152,9 +190,16 @@
       "default": [
         "_multiline_",
         "Die App verarbeitet ausschließlich offene Standortdaten oder Demo-Daten ohne personenbezogene Detaildaten.",
-        "<p>Alle für die Darstellung benötigten Programmbibliotheken werden mit der App ausgeliefert. Beim Aufruf werden dafür keine externen Server kontaktiert.</p>",
-        "<p>Die angezeigten Daten werden vom Browser direkt aus der konfigurierten Datenquelle geladen. Dabei werden technisch bedingt IP-Adresse und Browserkennung an deren Betreiber übermittelt. Maßgeblich ist der Schalter <code>proxyAktiv</code> der Instanz-Konfiguration.</p>",
-        "<h3>Beim Aufruf kontaktierte Drittanbieter</h3><p>Folgende externe Server werden kontaktiert. Dabei werden IP-Adresse und User-Agent der Besucher:innen an diese Anbieter übertragen:</p><ul><li><strong>tile.openstreetmap.org</strong> — Kartenkacheln (OpenStreetMap)</li></ul>"
+        "",
+        "Alle für die Darstellung benötigten Programmbibliotheken werden mit der App ausgeliefert. Beim Aufruf werden dafür keine externen Server kontaktiert.",
+        "",
+        "Die angezeigten Daten werden vom Browser direkt aus der konfigurierten Datenquelle geladen. Dabei werden technisch bedingt IP-Adresse und Browserkennung an deren Betreiber übermittelt. Maßgeblich ist der Schalter `proxyAktiv` der Instanz-Konfiguration.",
+        "",
+        "## Beim Aufruf kontaktierte Drittanbieter",
+        "",
+        "Folgende externe Server werden kontaktiert. Dabei werden IP-Adresse und User-Agent der Besucher:innen an diese Anbieter übertragen:",
+        "",
+        "- **tile.openstreetmap.org** — Kartenkacheln (OpenStreetMap)"
       ],
       "erforderlich": "ja"
     },
@@ -213,7 +258,7 @@
       "format": {
         "typ": "markdown"
       },
-      "default": "<ul><li><a href='https://www.bbk.bund.de/' target='_blank'>Bundesamt für Bevölkerungsschutz und Katastrophenhilfe</a></li><li><a href='https://open-data-app-store.de' target='_blank'>Open Data App Store</a></li></ul>",
+      "default": "- [Bundesamt für Bevölkerungsschutz und Katastrophenhilfe](https://www.bbk.bund.de/)\n- [Open Data App Store](https://open-data-app-store.de)",
       "erforderlich": "nein"
     },
     "datenquelleHinweis": {
@@ -223,7 +268,7 @@
       "format": {
         "typ": "markdown"
       },
-      "default": "<p>Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.</p><p>Die Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.</p>",
+      "default": "Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.\n\nDie Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.",
       "erforderlich": "nein"
     },
     "datenStand": {
