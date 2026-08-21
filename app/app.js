@@ -97,7 +97,7 @@ function normalizeEmergencyConfig(configdata = {}) {
   const config = { ...configdata };
   config.titel = config.titel || "Notfall-Lagebild";
   config.description = deriveEmergencyDescription(config);
-  config.apiurl = String(config.apiurl || "").trim();
+  config.apiurl = getOdasApiUrl(configdata, "standorte");
   config.proxyAktiv = String(configdata.proxyAktiv || "nein").trim().toLowerCase();
   config.weiterfuehrendeLinks = String(config.weiterfuehrendeLinks || "").trim();
   config.datenquelleHinweis = String(config.datenquelleHinweis || "").trim();
@@ -284,6 +284,17 @@ async function fetchOdasResource(targetUrl, configdata = {}) {
       `Direkter Datenabruf fehlgeschlagen (${error.message}). Bitte prüfen Sie die Daten-URL und die CORS-Freigabe der Datenquelle.`,
     );
   }
+}
+
+/**
+ * Löst eine benannte Datenressource aus configdata.apiurls auf.
+ * Neue apiurls-Form (typ: "array"); das frühere skalare apiurl wird nicht mehr gelesen.
+ * @returns {string} getrimmte URL, oder "" für den Zustand "keine Quelle konfiguriert"
+ */
+function getOdasApiUrl(configdata, name) {
+  const liste = Array.isArray(configdata && configdata.apiurls) ? configdata.apiurls : [];
+  const treffer = liste.find((eintrag) => eintrag && eintrag.name === name);
+  return String((treffer && treffer.url) || "").trim();
 }
 
 async function fetchOdasJson(targetUrl, configdata = {}) {

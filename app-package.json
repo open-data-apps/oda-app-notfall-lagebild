@@ -3,7 +3,7 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
   "kurzbeschreibung": "Operatives Lagebild für kommunale Notfall-Infrastruktur, Status, Kapazitäten und räumliche Versorgung.",
@@ -15,7 +15,7 @@
     "",
     "## Methodik",
     "",
-    "Die App ruft die konfigurierte Datenquelle (`apiurl`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+    "Die App ruft die konfigurierte Datenquelle (`apiurls.standorte`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
     "",
     "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
     "",
@@ -133,7 +133,7 @@
         "",
         "## Methodik",
         "",
-        "Die App ruft die konfigurierte Datenquelle (`apiurl`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+        "Die App ruft die konfigurierte Datenquelle (`apiurls.standorte`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
         "",
         "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
         "",
@@ -239,17 +239,24 @@
       },
       "erforderlich": "ja"
     },
-    "apiurl": {
-      "label": "URL zu den Standortdaten",
+    "apiurls": {
+      "label": "URLs zu Datenressourcen",
       "category": "datenherkunft",
-      "hilfe": "Direkter JSON- oder CSV-Endpunkt der Standortdaten.",
+      "hilfe": "Direkter Download-, Datei- oder API-Endpunkt der tatsächlich verwendeten Datenquelle(n). Mehrere Einträge möglich.",
+      "typ": "array",
       "format": {
         "typ": "url",
-        "laenge": 255
+        "laenge": 500
       },
-      "default": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
-      "beispiel": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
-      "erforderlich": "ja"
+      "urls": [
+        {
+          "name": "standorte",
+          "label": "URL zu den Standortdaten",
+          "default": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
+          "beispiel": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
+          "erforderlich": "ja"
+        }
+      ]
     },
     "weiterfuehrendeLinks": {
       "label": "Weiterführende Links",

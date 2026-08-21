@@ -40,7 +40,7 @@ Für CORS-sensitive Datenquellen ist der ODAS-Proxy standardmäßig aktiviert. I
 
 ### Gebündelte Beispieldaten
 
-Zusätzlich liegen statische Beispielquellen im `assets`-Ordner. Sie können bei Bedarf manuell als alternative `apiurl` verwendet werden.
+Zusätzlich liegen statische Beispielquellen im `assets`-Ordner. Sie können bei Bedarf manuell als alternative `apiurls.standorte` verwendet werden.
 
 | Datei | Verwendung |
 | --- | --- |
@@ -86,7 +86,7 @@ Wichtige Instanz-Parameter:
 | `titel` | Titel in der App | ja |
 | `seitentitel` | Browser-Tab-Titel | ja |
 | `urlDaten` | Datensatz- oder Ressourcenseite im ODP | ja |
-| `apiurl` | Direkter JSON-/CSV-Endpunkt | ja |
+| `apiurls` | URLs zu Datenressourcen. Eintrag `standorte`: direkter JSON-/CSV-Endpunkt | ja (Eintrag `standorte`) |
 | `useProxy` | ODAS-Proxy für CORS-sensitive Quellen verwenden | nein |
 
 Interne App-Defaults wie Kartenmittelpunkt, Zoom, KPI-Schwellen und Tabellen-Seitengröße werden nicht mehr über Instanz-Config gepflegt, sondern direkt in `app/app.js` abgeleitet oder als interne Konstanten geführt.
