@@ -177,7 +177,7 @@
         "{{odp.anbieter.strasse}}  ",
         "{{odp.anbieter.plzort}}",
         "",
-        "Website: [{{odp.anbieter.url-extern}}]({{odp.anbieter.url-extern}})"
+        "Website: [{{odp.anbieter.url}}]({{odp.anbieter.url}})"
       ],
       "erforderlich": "ja"
     },
