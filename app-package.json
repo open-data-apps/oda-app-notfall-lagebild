@@ -3,7 +3,7 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "app-version": "1.28.1",
+  "app-version": "1.28.2",
   "app-package-version": "2",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
@@ -65,7 +65,7 @@
     "beschreibung": "Tabellarischer Standortdatensatz für kommunale Notfall-Infrastruktur mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.",
     "schema": "assets/schema.json",
     "beispiel": "Direkter JSON- oder CSV-Datenendpunkt für das kommunale Notfall-Lagebild.",
-    "beispiel-url": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7"
+    "beispiel-url": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json"
   },
   "branding-css": "",
   "api-version": "1",

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.28.2 - 2026-09-07
+- **FIX:** Frictionless-Härtung: 23 Feld-Beschreibungen ergänzt; `ja`/`nein`-Texte von `boolean` auf `string` korrigiert (Messungsbeleg); `beispiel-url` auf Datei-Endpunkt konkretisiert. JSON-Pfad ist Validator-blind — Key-Match (23/23) manuell verifiziert.
+
 ## 1.28.1 - 2026-09-01
 
 - **FIX:** `beschreibung` korrigiert – Drei-Stufen-Block nutzt jetzt `{{{appinstanz.urlDaten}}}` (Datensatz) + `{{{appinstanz.apiurls.1}}}` (Ressource) statt `{{{urlDaten}}}/resource/…`; lokale `odas-config` gespiegelt (Inventur 2026-09-01).

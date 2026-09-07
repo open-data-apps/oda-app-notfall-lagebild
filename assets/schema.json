@@ -10,7 +10,8 @@
       "type": "string",
       "constraints": {
         "required": true
-      }
+      },
+      "description": "Eindeutige Kennung des Standorts."
     },
     {
       "name": "name",
@@ -18,7 +19,8 @@
       "type": "string",
       "constraints": {
         "required": true
-      }
+      },
+      "description": "Name des Standorts."
     },
     {
       "name": "typ",
@@ -26,12 +28,14 @@
       "type": "string",
       "constraints": {
         "required": true
-      }
+      },
+      "description": "Art des Standorts, z. B. Notunterkunft."
     },
     {
       "name": "untertyp",
       "title": "Feinerer Typ",
-      "type": "string"
+      "type": "string",
+      "description": "Unterart des Standorts."
     },
     {
       "name": "status",
@@ -44,88 +48,105 @@
           "außer Betrieb",
           "geplant"
         ]
-      }
+      },
+      "description": "Betriebsstatus, z. B. aktiv."
     },
     {
       "name": "kapazitaet_max",
       "title": "Gesamtkapazität",
-      "type": "integer"
+      "type": "integer",
+      "description": "Maximale Kapazität (Plätze)."
     },
     {
       "name": "kapazitaet_verfuegbar",
       "title": "Freie Kapazität",
-      "type": "integer"
+      "type": "integer",
+      "description": "Aktuell verfügbare Kapazität (Plätze)."
     },
     {
       "name": "auslastung_prozent",
       "title": "Auslastung in Prozent",
-      "type": "integer"
+      "type": "integer",
+      "description": "Auslastung in Prozent."
     },
     {
       "name": "strasse",
       "title": "Straße und Hausnummer",
-      "type": "string"
+      "type": "string",
+      "description": "Straße und Hausnummer."
     },
     {
       "name": "plz",
       "title": "Postleitzahl",
-      "type": "string"
+      "type": "string",
+      "description": "Postleitzahl als Text."
     },
     {
       "name": "ort",
       "title": "Ort",
-      "type": "string"
+      "type": "string",
+      "description": "Ort."
     },
     {
       "name": "stadtteil",
       "title": "Stadtteil oder Bezirk",
-      "type": "string"
+      "type": "string",
+      "description": "Stadtteil."
     },
     {
       "name": "lat",
       "title": "Breitengrad",
-      "type": "number"
+      "type": "number",
+      "description": "Breitengrad (WGS84)."
     },
     {
       "name": "lon",
       "title": "Längengrad",
-      "type": "number"
+      "type": "number",
+      "description": "Längengrad (WGS84)."
     },
     {
       "name": "barrierefrei",
       "title": "Barrierefrei",
-      "type": "boolean"
+      "type": "string",
+      "description": "Barrierefreiheit als „ja“/„nein“-Text (kein JSON-Boolean)."
     },
     {
       "name": "stromversorgung_notstrom",
       "title": "Notstrom vorhanden",
-      "type": "boolean"
+      "type": "string",
+      "description": "Notstromversorgung als „ja“/„nein“-Text."
     },
     {
       "name": "wasser_verfuegbar",
       "title": "Wasser verfügbar",
-      "type": "boolean"
+      "type": "string",
+      "description": "Trinkwasserversorgung als „ja“/„nein“-Text."
     },
     {
       "name": "sanitaer_verfuegbar",
       "title": "Sanitär verfügbar",
-      "type": "boolean"
+      "type": "string",
+      "description": "Sanitärversorgung als „ja“/„nein“-Text."
     },
     {
       "name": "betreiber",
       "title": "Betreiber oder Zuständigkeit",
-      "type": "string"
+      "type": "string",
+      "description": "Betreiber des Standorts."
     },
     {
       "name": "ansprechpartner",
       "title": "Ansprechstelle",
-      "type": "string"
+      "type": "string",
+      "description": "Ansprechpartner vor Ort."
     },
     {
       "name": "letzte_pruefung",
       "title": "Letzte Prüfung",
       "type": "date",
-      "format": "default"
+      "format": "default",
+      "description": "Datum der letzten Prüfung (JJJJ-MM-TT)."
     },
     {
       "name": "prioritaet",
@@ -137,12 +158,14 @@
           "mittel",
           "niedrig"
         ]
-      }
+      },
+      "description": "Priorität, z. B. hoch."
     },
     {
       "name": "hinweis",
       "title": "Hinweis",
-      "type": "string"
+      "type": "string",
+      "description": "Freier Hinweis zum Standort."
     }
   ],
   "primaryKey": "id",
