@@ -1,7 +1,9 @@
 # Changelog
 
-## 1.28.2 - 2026-09-07
+## 1.28.3 - 2026-09-08
 - **FIX:** Variante-A-Verdrahtung (F-92): Typprüfung (ckan-dl) vor dem ersten Fetch; Quellen- und Ladefehler über `renderOdasFehler` (1.28.2 -> 1.28.3).
+
+## 1.28.2 - 2026-09-07
 - **FIX:** Frictionless-Härtung: 23 Feld-Beschreibungen ergänzt; `ja`/`nein`-Texte von `boolean` auf `string` korrigiert (Messungsbeleg); `beispiel-url` auf Datei-Endpunkt konkretisiert. JSON-Pfad ist Validator-blind — Key-Match (23/23) manuell verifiziert.
 
 ## 1.28.1 - 2026-09-01
