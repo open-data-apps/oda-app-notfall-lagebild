@@ -146,8 +146,24 @@ async function initializeEmergencyDashboard(state) {
   const quelle = String(state.config.apiurl || "").trim();
   if (!quelle || /^\{\{.*\}\}$/.test(quelle) || /^<.*>$/.test(quelle)) {
     setEmergencyLoading(state, "");
-    showEmergencyAlert(state, "Es ist keine Datenquelle konfiguriert.", "info");
-    updateEmergencyDashboard(state);
+    renderOdasFehler(state.host, new Error("Keine Datenquelle konfiguriert."), {
+      url: quelle,
+      label: "Standorte-API",
+      typLabel: "Datei-Download",
+      erwarteterTyp: "ckan-dl",
+    });
+    return;
+  }
+  // Variante A (F-92): Typprüfung vor dem ersten Fetch.
+  const nlbTypWarn = validateUrlTypErwartung(quelle, "ckan-dl");
+  if (nlbTypWarn) {
+    setEmergencyLoading(state, "");
+    renderOdasFehler(state.host, new Error(nlbTypWarn), {
+      url: quelle,
+      label: "Standorte-API",
+      typLabel: "Datei-Download",
+      erwarteterTyp: "ckan-dl",
+    });
     return;
   }
 
@@ -185,14 +201,16 @@ async function initializeEmergencyDashboard(state) {
     if (state.disposed) return;
     console.error("Notfall-Lagebild konnte nicht geladen werden:", error);
     state.allRecords = [];
-    populateEmergencyFilters(state);
-    showEmergencyAlert(
-      state,
-      `Fehler beim Laden der Daten: ${error.message || "Unbekannter Fehler"}`,
-      "danger"
-    );
     setEmergencyLoading(state, "");
-    updateEmergencyDashboard(state);
+    renderOdasFehler(state.host, error, {
+      url: String(state.config.apiurl || "").trim(),
+      label: "Standorte-API",
+      typLabel: "Datei-Download",
+      erwarteterTyp: "ckan-dl",
+    });
+    // renderOdasFehler ersetzt die komplette App-Schale; Dashboard-Updates
+    // danach waeren wirkungslos bzw. wuerfen Fehler (kein Null-Check in
+    // setEmergencyLoading), daher frueher Ausstieg.
   }
 }
 
