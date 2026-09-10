@@ -18,7 +18,6 @@ Die App ist eine Single Page Application mit:
 - Interaktive Leaflet-Karte mit farbigen Status-Markern, Clustering, Popups, Legende und optionalem 1-km-Radius
 - Chart.js-Balkendiagramm "Standorte nach Typ"
 - Sortierbare, paginierte Standorttabelle
-- Demo-Daten als statische Dateien im `assets`-Ordner
 
 ---
 
@@ -44,8 +43,7 @@ Zusätzlich liegen statische Beispielquellen im `assets`-Ordner. Sie können bei
 
 | Datei | Verwendung |
 | --- | --- |
-| `assets/notfall-lagebild-demo.csv` | CSV-Demoquelle |
-| `assets/notfall-lagebild-demo.json` | JSON-Demoquelle (Default) |
+| `https://open-data-musterstadt.ckan.de/.../notfall-lagebild-demo.json` | Beispielquelle (Paket-Default, extern) |
 
 ---
 
@@ -120,8 +118,6 @@ make build up
 | `app-package.json` | ODAS-App-Metadaten und Instanz-Konfiguration |
 | `assets/schema.json` | Frictionless Data Schema für die Standortdaten |
 | `assets/odas-app-icon.svg` | App-Icon |
-| `assets/notfall-lagebild-demo.json` | Gebündelte alternative JSON-Beispielquelle |
-| `assets/notfall-lagebild-demo.csv` | Gebündelte alternative CSV-Beispielquelle |
 | `odas-config/config.json` | Lokale Entwicklungs-Konfiguration |
 
 ---
