@@ -34,10 +34,13 @@ const NLB_ASSETS = {};
 // zur App passende Muster (Portfolio-Muster aus Task 9.1).
 const nlbInstances = new Map();
 
-function onPageLeave(page) {
-  nlbInstances.forEach((state, container) => {
-    state.disposed = true;
-    if (state.map) {
+// NLB-B1: Der Teardown ist ausgelagert, damit ihn auch der Re-App-Pfad fuer die
+// Vorgaenger-Instanz nutzen kann (vorher ueberschrieb app() den Registry-Eintrag
+// ohne Aufraeumen — Karte und Chart der alten Instanz blieben aktiv).
+function teardownNotfallInstanz(state, container) {
+  state.disposed = true;
+  if (state.controller) state.controller.abort();
+  if (state.map) {
       try {
         state.map.remove();
       } catch (error) {
@@ -54,6 +57,15 @@ function onPageLeave(page) {
       state.chart = null;
     }
     nlbInstances.delete(container);
+}
+
+function onPageLeave(page) {
+  [...nlbInstances.entries()].forEach(([container, state]) => {
+    try {
+      teardownNotfallInstanz(state, container);
+    } catch (error) {
+      console.warn("Fehler beim Abraeumen der Notfall-Lagebild-Instanz:", error);
+    }
   });
 }
 
@@ -84,8 +96,16 @@ function app(configdata = {}, enclosingHtmlDivElement) {
       chart: false,
     },
     disposed: false,
+    controller: new AbortController(), // NLB-B3: laufender Abruf ist abbrechbar
   };
 
+  // NLB-B1: Vorgaenger-Instanz desselben Containers zuerst abraeumen.
+  const nlbVorheriger = nlbInstances.get(enclosingHtmlDivElement);
+  if (nlbVorheriger) {
+    try {
+      teardownNotfallInstanz(nlbVorheriger, enclosingHtmlDivElement);
+    } catch (_e) {}
+  }
   nlbInstances.set(enclosingHtmlDivElement, state);
 
   enclosingHtmlDivElement.innerHTML = renderEmergencyShell(config, nlbUid);
@@ -185,7 +205,10 @@ async function initializeEmergencyDashboard(state) {
         ];
 
   try {
-    const [records] = await Promise.all([loadEmergencyRecords(state.config), ...libraryPromises]);
+    const [records] = await Promise.all([
+      loadEmergencyRecords(state.config, state.controller.signal),
+      ...libraryPromises,
+    ]);
     if (state.disposed) return;
     state.allRecords = records;
     state.mapCenter = deriveEmergencyMapCenter(records);
@@ -199,6 +222,7 @@ async function initializeEmergencyDashboard(state) {
     updateEmergencyDashboard(state);
   } catch (error) {
     if (state.disposed) return;
+    if (error && error.name === "AbortError") return;
     console.error("Notfall-Lagebild konnte nicht geladen werden:", error);
     state.allRecords = [];
     setEmergencyLoading(state, "");
@@ -214,20 +238,20 @@ async function initializeEmergencyDashboard(state) {
   }
 }
 
-async function loadEmergencyRecords(config) {
+async function loadEmergencyRecords(config, signal) {
   if (!config.apiurl) {
     return [];
   }
 
-  const rawText = await fetchEmergencyText(config.apiurl, config);
+  const rawText = await fetchEmergencyText(config.apiurl, config, signal);
   const rawRecords = await parseEmergencyData(rawText);
   const records = rawRecords.map((record, index) => normalizeEmergencyRecord(record, index));
 
   return records;
 }
 
-async function fetchEmergencyText(url, config) {
-  return fetchOdasResource(url, config);
+async function fetchEmergencyText(url, config, signal) {
+  return fetchOdasResource(url, config, { signal });
 }
 
 function isOdasProxyEnabled(configdata = {}) {
@@ -297,18 +321,21 @@ async function fetchViaOdasProxy(targetUrl, options = {}) {
   return proxyData.content;
 }
 
-async function fetchOdasResource(targetUrl, configdata = {}) {
+async function fetchOdasResource(targetUrl, configdata = {}, options = {}) {
   if (isOdasProxyEnabled(configdata)) {
-    return fetchViaOdasProxy(targetUrl);
+    return fetchViaOdasProxy(targetUrl, options);
   }
 
   try {
-    const response = await fetch(targetUrl);
+    const response = await fetch(targetUrl, {
+      signal: options && options.signal ? options.signal : undefined,
+    });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
     return response.text();
   } catch (error) {
+    if (error && error.name === "AbortError") throw error;
     throw new Error(
       `Direkter Datenabruf fehlgeschlagen (${error.message}). Bitte prüfen Sie die Daten-URL und die CORS-Freigabe der Datenquelle.`,
     );
@@ -326,8 +353,8 @@ function getOdasApiUrl(configdata, name) {
   return String((treffer && treffer.url) || "").trim();
 }
 
-async function fetchOdasJson(targetUrl, configdata = {}) {
-  const rawContent = await fetchOdasResource(targetUrl, configdata);
+async function fetchOdasJson(targetUrl, configdata = {}, options = {}) {
+  const rawContent = await fetchOdasResource(targetUrl, configdata, options);
   try {
     return JSON.parse(rawContent);
   } catch (_error) {
@@ -484,15 +511,6 @@ function renderOdasFehler(container, error, kontext = {}) {
   const titel = kontext.leer ? "Keine Datensätze gefunden." : info.titel;
   const alertClass = kontext.leer ? "alert-info" : info.alertClass;
   container.innerHTML = `<div class="alert ${alertClass}" role="alert"><strong>${escapeHtml(titel)}</strong><p class="mb-1">${escapeHtml(info.hinweis)}</p>${urlZeile}<details class="small"><summary>Details</summary><code>${escapeHtml(info.detail || String(error))}</code></details></div>`;
-}
-
-function isLeerErgebnis(json) {
-  if (!json) return true;
-  if (Array.isArray(json) && json.length === 0) return true;
-  if (Array.isArray(json.records) && json.records.length === 0) return true;
-  if (Array.isArray(json.results) && json.results.length === 0) return true;
-  if (json.result && Array.isArray(json.result.records) && json.result.records.length === 0) return true;
-  return false;
 }
 
 
@@ -1533,7 +1551,14 @@ function loadScriptOnce(id, src, isLoaded) {
     script.id = id;
     script.src = src;
     script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.onerror = () => {
+      // NLB-B2: Fehlversuch NICHT cachen. Vorher blieb die (mit false
+      // aufgeloeste) Promise fuer die ganze Sitzung im Modulcache — die
+      // Bibliothek war danach dauerhaft gesperrt, auch in anderen Instanzen,
+      // ohne neuen Ladeversuch.
+      delete NLB_ASSETS[id];
+      resolve(false);
+    };
     document.head.appendChild(script);
   });
 
@@ -1577,7 +1602,9 @@ function loadPapaparseLibrary() {
   );
 }
 
-function addToHead() {}
+function addToHead() {
+  return ``;
+}
 
 if (typeof window !== "undefined") {
   window.NotfallLagebild = {

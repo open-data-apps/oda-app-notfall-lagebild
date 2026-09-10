@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.28.4 - 2026-09-10
+- **FIX (NLB-B1):** `nlbInstances.set(...)` ohne Vorgänger-Cleanup — bei Same-Page-Re-Render blieben Leaflet-Karte **und** Chart der alten Instanz aktiv. Der Teardown ist dafür in `teardownNotfallInstanz()` ausgelagert (Hook und Re-App-Pfad teilen sich den Pfad).
+- **FIX (NLB-B2):** Ein fehlgeschlagener Bibliotheks-Ladevorgang wurde als **Erfolg** gecacht (`NLB_ASSETS[id]` mit `resolve(false)`): die Bibliothek war danach für die ganze Sitzung gesperrt — auch in anderen Instanzen und ohne neuen Versuch. Fehlversuche werden jetzt verworfen, der nächste Aufruf lädt erneut.
+- **FIX (NLB-B3):** `AbortController` je Instanz; der Datenabruf läuft mit `signal` und wird im Teardown abgebrochen. `fetchOdasResource`/`fetchOdasJson` reichen `signal` durch und werfen `AbortError` unverpackt.
+- **TECH (NLB-B4):** `isLeerErgebnis` entfernt; `addToHead` gibt `""` statt `undefined` zurück.
+
 ## 1.28.3 - 2026-09-08
 - **FIX:** Variante-A-Verdrahtung (F-92): Typprüfung (ckan-dl) vor dem ersten Fetch; Quellen- und Ladefehler über `renderOdasFehler` (1.28.2 -> 1.28.3).
 
