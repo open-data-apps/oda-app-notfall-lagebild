@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.28.6 - 2026-10-02
+- ENH: Verwendete ODAS-Dienste in `odas-services` deklariert.
+
 ## 1.28.5 - 2026-09-10
 - **TECH (NLB-B5, By-catch aus der Review-Welle):** Zwei ungenutzte Demo-Dateien entfernt — `assets/notfall-lagebild-demo.csv` (245 KB) und `.json` (559 KB, zusammen rund 804 KB). Der Code kennt keinen Demo-Modus (kein „demo“ in `app.js`), Paket-Default und lokale Config zeigen auf eine externe Beispiel-URL, und die Dateien wurden nirgends referenziert; sie landeten aber über das `assets`-Ziel des Makefile im Liefer-ZIP. README entsprechend korrigiert (nannte sie noch als „Demo-Daten“/„Demoquelle (Default)“). Gleiche Klasse wie F-108 in `oda-jagdbezirke`.
 

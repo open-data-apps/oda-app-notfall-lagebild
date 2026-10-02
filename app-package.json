@@ -3,7 +3,7 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "app-version": "1.28.5",
+  "app-version": "1.28.6",
   "app-package-version": "2",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
@@ -69,6 +69,7 @@
   },
   "branding-css": "",
   "api-version": "1",
+  "odas-services": ["proxy"],
   "instanz-config": {
     "seitentitel": {
       "label": "Seitentitel",
