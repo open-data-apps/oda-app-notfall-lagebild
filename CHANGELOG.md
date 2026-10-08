@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.28.7 - 2026-10-08
+- FIX: Bekannte Demoquelle wird in der Startansicht deutlich als Anschauungsbeispiel ohne reale Einsatzdaten gekennzeichnet; der Hinweis bleibt bei Filterung sichtbar.
+- FIX: Eigene Markersymbole N für Notfall-Anlaufstellen und M für mobile Versorgungsstellen; zusätzliche Typ-Legende erklärt die tatsächlich vorkommenden Standortarten.
+- DOC: Der optionale 1-km-Radius wird ausdrücklich als Umkreis um jeden gefilterten Standort beschrieben, nicht als geprüfte Versorgungsreichweite.
+- TEST: Sieben Regressionstests für Demo-Erkennung, Markersymbole, maskierte Typ-Legende und Radius-Hinweis; Paketbeschreibung, lokale Konfiguration und README abgeglichen.
+
 ## 1.28.6 - 2026-10-02
 - ENH: Verwendete ODAS-Dienste in `odas-services` deklariert.
 

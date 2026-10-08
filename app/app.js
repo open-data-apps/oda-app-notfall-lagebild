@@ -798,9 +798,24 @@ function normalizeBooleanFilter(value) {
   return null;
 }
 
+function isKnownNotfallDemoUrl(url) {
+  if (!url) return false;
+  try {
+    return new URL(String(url), window.location.href).pathname.endsWith("/notfall-lagebild-demo.json");
+  } catch (_error) {
+    return false;
+  }
+}
+
 function renderEmergencyShell(config, uid) {
   return `
     <section class="nlb-app" aria-label="Notfall-Lagebild">
+      ${isKnownNotfallDemoUrl(config.apiurl) ? `
+        <div class="alert alert-warning" role="note">
+          <strong>Demo-Daten – keine realen Einsatzdaten</strong>
+          <p class="mb-0">Die dargestellten Standorte und Kapazitäten sind Anschauungsbeispiele und keine Notfallentscheidungsgrundlage.</p>
+        </div>
+      ` : ""}
       <div class="nlb-toolbar">
         <div>
           <p class="nlb-eyebrow mb-1">Kommunales Lagebild</p>
@@ -849,11 +864,12 @@ function renderEmergencyShell(config, uid) {
               <h3>Karte</h3>
               <div class="btn-group">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-zoom-results-${uid}">Treffer zentrieren</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-toggle-radius-${uid}">1 km Radius</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-toggle-radius-${uid}" title="Zeigt einen Radius von 1 km um jeden gefilterten Standort, keine geprüfte Versorgungsreichweite.">1 km Radius</button>
               </div>
             </div>
             <div id="nlb-map-${uid}" class="nlb-map" role="application" aria-label="Standortkarte"></div>
             <div class="nlb-map-legend" id="nlb-map-legend-${uid}"></div>
+            <p class="text-muted small mt-2 mb-0">Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite.</p>
           </section>
         </div>
         <div class="col-12 col-xl-4">
@@ -1130,14 +1146,33 @@ function setText(state, id, text) {
 
 function renderEmergencyLegend(state) {
   const legend = state.host.querySelector(`#nlb-map-legend-${state.uid}`);
-  legend.innerHTML = Object.values(NLB_STATUS)
-    .map(
-      (status) =>
-        `<span><i style="background:${NLB_STATUS_COLORS[status]}"></i>${escapeHtml(
-          NLB_STATUS_LABELS[status]
-        )}</span>`
-    )
-    .join("");
+  const types = Array.from(
+    new Set(
+      (state.allRecords || [])
+        .map((record) => String((record && record.typ) || "").trim())
+        .filter(Boolean),
+    ),
+  );
+  const typeLegend = types.length
+    ? `<span><strong>Typen:</strong></span>${types
+        .map(
+          (type) =>
+            `<span class="nlb-map-type-item"><span class="nlb-map-marker nlb-map-type-marker" aria-hidden="true">${escapeHtml(
+              typeInitial(type),
+            )}</span><span>${escapeHtml(type)}</span></span>`,
+        )
+        .join("")}`
+    : "";
+
+  legend.innerHTML =
+    Object.values(NLB_STATUS)
+      .map(
+        (status) =>
+          `<span><i style="background:${NLB_STATUS_COLORS[status]}"></i>${escapeHtml(
+            NLB_STATUS_LABELS[status],
+          )}</span>`,
+      )
+      .join("") + typeLegend;
 }
 
 function updateEmergencyMap(state) {
@@ -1472,6 +1507,8 @@ function typeInitial(type) {
   if (normalized.includes("feuerwehr")) return "F";
   if (normalized.includes("wasser")) return "W";
   if (normalized.includes("unterkunft")) return "U";
+  if (normalized.includes("notfall-anlaufstelle")) return "N";
+  if (normalized.includes("mobile versorgungsstelle")) return "M";
   return "P";
 }
 

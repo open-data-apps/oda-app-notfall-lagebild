@@ -1,6 +1,6 @@
 # Notfall-Lagebild
 
-Die App **Notfall-Lagebild** bietet ein operatives Dashboard für kommunale Notfall-Infrastruktur, Standorte, Status, Kapazitäten und räumliche Versorgung.
+Die App **Notfall-Lagebild** visualisiert konfigurierte Standortdaten zur kommunalen Notfall-Infrastruktur mit Status, Kapazitäten und räumlicher Einordnung. Sie unterstützt die Orientierung, ersetzt aber keine amtliche Einsatz- oder Krisenentscheidung.
 
 Die App ist für die Verwendung im [Open Data App Store](https://open-data-app-store.de/) gemacht und entspricht dem ODAS-Modell einer konfigurierbaren Open Data App.
 
@@ -15,7 +15,7 @@ Die App ist eine Single Page Application mit:
 - Seiten für Impressum, Datenschutz, Beschreibung, Kontakt und Hauptinhalt
 - Kennzahlen für aktive, gestörte und überfällige Standorte
 - Filter für Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Priorität und Freitextsuche
-- Interaktive Leaflet-Karte mit farbigen Status-Markern, Clustering, Popups, Legende und optionalem 1-km-Radius
+- Interaktive Leaflet-Karte mit farbigen Status-Markern, Clustering, Popups, Typ-Legende und optionalem 1-km-Radius
 - Chart.js-Balkendiagramm "Standorte nach Typ"
 - Sortierbare, paginierte Standorttabelle
 
@@ -31,19 +31,23 @@ Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisen
 
 Die App unterstützt folgende Datenquellen:
 
-- **Standardquelle**: externe JSON-Ressource unter `https://open-data-musterstadt.ckan.de/.../download/notfall-lagebild-demo.json`
+- **Paket-Standardquelle**: externe JSON-Demo-Ressource unter `https://open-data-musterstadt.ckan.de/.../download/notfall-lagebild-demo.json`
 - **JSON**: Array oder Objekt mit `records`, `results`, `data` oder direkten CKAN-`datastore_search`-Antworten
 - **CSV**: Komma- oder Semikolon-separierte Dateien mit Kopfzeile
 
-Für CORS-sensitive Datenquellen ist der ODAS-Proxy standardmäßig aktiviert. Im ODAS-Betrieb ruft die App externe Pfade per `POST` über `/odp-data?path=...` ab; bei lokalen Live-Server-Tests versucht sie weiter zuerst den Direktabruf.
+Der Datenabruf erfolgt standardmäßig direkt im Browser (`proxyAktiv: nein`). Bei `proxyAktiv: ja` nutzt die App im ODAS-Betrieb den ODAS-Proxy; lokale Tests verwenden den Direktabruf.
 
-### Gebündelte Beispieldaten
+### Demoquelle und Grenzen
 
-Zusätzlich liegen statische Beispielquellen im `assets`-Ordner. Sie können bei Bedarf manuell als alternative `apiurls.standorte` verwendet werden.
+Der Paket-Default verweist auf die bekannte Demo-Ressource. Die dort dargestellten Standorte und Kapazitäten sind Anschauungsbeispiele, keine realen Einsatzdaten und keine Notfallentscheidungsgrundlage. Die Startansicht kennzeichnet nur diese bekannte URL; die Meldung bleibt auch bei Filterung sichtbar. Andere konfigurierte Quellen werden nicht pauschal als Demo eingeordnet. Die Demo-Datei wird extern geladen und liegt nicht als statische Beispieldatei im `assets`-Ordner.
 
-| Datei | Verwendung |
+| Quelle | Verwendung |
 | --- | --- |
-| `https://open-data-musterstadt.ckan.de/.../notfall-lagebild-demo.json` | Beispielquelle (Paket-Default, extern) |
+| `https://open-data-musterstadt.ckan.de/.../notfall-lagebild-demo.json` | Paket-Standardquelle (Demo, extern) |
+
+### Kartenlegende und Radius
+
+Die Statusfarben zeigen den Status der Standorte; die Markerbuchstaben stehen für die in den Daten vorkommenden Standorttypen. Insbesondere kennzeichnet **N** eine Notfall-Anlaufstelle und **M** eine mobile Versorgungsstelle; beide sind damit nicht länger als „P“ zusammengefasst. Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite. Er ist standardmäßig ausgeschaltet.
 
 ---
 
@@ -85,7 +89,7 @@ Wichtige Instanz-Parameter:
 | `seitentitel` | Browser-Tab-Titel | ja |
 | `urlDaten` | Datensatz- oder Ressourcenseite im ODP | ja |
 | `apiurls` | URLs zu Datenressourcen. Eintrag `standorte`: direkter JSON-/CSV-Endpunkt | ja (Eintrag `standorte`) |
-| `useProxy` | ODAS-Proxy für CORS-sensitive Quellen verwenden | nein |
+| `proxyAktiv` | ODAS-Proxy verwenden (`ja` nur für freigegebene Quellen; Standard `nein`) | nein |
 
 Interne App-Defaults wie Kartenmittelpunkt, Zoom, KPI-Schwellen und Tabellen-Seitengröße werden nicht mehr über Instanz-Config gepflegt, sondern direkt in `app/app.js` abgeleitet oder als interne Konstanten geführt.
 
@@ -170,6 +174,14 @@ Diese Anbieter bleiben auch im Standalone-Betrieb extern; ein vollständig autar
 `make zip` erzeugt das Liefer-ZIP mit `app/`, `assets/`, `app-package.json` und
 `CHANGELOG.md`. Die Infrastrukturdateien (`Dockerfile`, `docker-compose*.yml`,
 `nginx.conf`, `Makefile`) sind nicht Teil der Auslieferung. Das ZIP ist ein Bauartefakt und wird nicht mitversioniert, sondern bei Bedarf mit `make zip` erzeugt.
+
+## Regressionstests
+
+```bash
+node --test tests/*.test.cjs
+```
+
+Die Tests prüfen die tatsächlichen Render- und Normalisierungsfunktionen der App: Erkennung der bekannten Demoquelle einschließlich URL-Parametern, keine Demo-Kennzeichnung anderer Quellen, eigenständiger Demo-Hinweis, unterschiedliche N/M-Symbole, maskierte Typnamen in der Legende und die Erklärung des Radius. Es werden keine zusätzlichen Test-Abhängigkeiten benötigt.
 
 ## Autor
 
