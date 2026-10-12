@@ -1,0 +1,82 @@
+[
+  {
+    "id": "A",
+    "name": "Unterkunft Mitte",
+    "typ": "Notunterkunft",
+    "stadtteil": "Mitte",
+    "status": "aktiv",
+    "kapazitaet_max": 10,
+    "kapazitaet_verfuegbar": 8,
+    "letzte_pruefung": "2026-04-14",
+    "lat": 48.7,
+    "lon": 9.3,
+    "barrierefrei": true,
+    "strasse": "Teststraße 1",
+    "ansprechpartner": "Fachstelle",
+    "hinweis": "Vollständiger Hinweis"
+  },
+  {
+    "id": "B",
+    "name": "Halle Mitte",
+    "typ": "Notunterkunft",
+    "stadtteil": "Mitte",
+    "status": "eingeschränkt",
+    "kapazitaet_max": 10,
+    "kapazitaet_verfuegbar": 3,
+    "lat": 48.71,
+    "lon": 9.31,
+    "barrierefrei": false
+  },
+  {
+    "id": "C",
+    "name": "Anlaufstelle geschlossen",
+    "typ": "Anlaufstelle",
+    "stadtteil": "Nord",
+    "status": "außer Betrieb",
+    "kapazitaet_max": 10,
+    "kapazitaet_verfuegbar": 2,
+    "lat": 48.72,
+    "lon": 9.32
+  },
+  {
+    "id": "D",
+    "name": "Anlaufstelle geplant",
+    "typ": "Anlaufstelle",
+    "stadtteil": "Nord",
+    "status": "geplant",
+    "kapazitaet_max": 10,
+    "kapazitaet_verfuegbar": 5,
+    "letzte_pruefung": "2026-04-15",
+    "lat": 48.73,
+    "lon": 9.33
+  },
+  {
+    "id": "E",
+    "name": "Anlaufstelle unbekannt",
+    "typ": "Anlaufstelle",
+    "stadtteil": "Nord",
+    "letzte_pruefung": "2026-04-16",
+    "lat": 48.74,
+    "lon": 9.34
+  },
+  {
+    "id": "F",
+    "name": "Halle Störung",
+    "typ": "Notunterkunft",
+    "stadtteil": "Nord",
+    "status": "gestört",
+    "kapazitaet_max": 10,
+    "kapazitaet_verfuegbar": 7
+  },
+  {
+    "id": "G",
+    "name": "AED Mitte",
+    "typ": "AED",
+    "stadtteil": "Mitte",
+    "status": "aktiv",
+    "kapazitaet_max": 0,
+    "kapazitaet_verfuegbar": 0,
+    "lat": 0,
+    "lon": 0
+  }
+]

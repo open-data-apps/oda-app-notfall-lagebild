@@ -5,6 +5,8 @@ const NLB_STATUS = {
   restricted: "eingeschraenkt",
   offline: "ausser Betrieb",
   planned: "geplant",
+  unspecified: "stoerung",
+  unknown: "unbekannt",
 };
 
 const NLB_STATUS_LABELS = {
@@ -12,6 +14,8 @@ const NLB_STATUS_LABELS = {
   [NLB_STATUS.restricted]: "Eingeschränkt",
   [NLB_STATUS.offline]: "Außer Betrieb",
   [NLB_STATUS.planned]: "Geplant",
+  [NLB_STATUS.unspecified]: "Störung (Ausmaß unbekannt)",
+  [NLB_STATUS.unknown]: "Unbekannt",
 };
 
 const NLB_STATUS_COLORS = {
@@ -19,12 +23,13 @@ const NLB_STATUS_COLORS = {
   [NLB_STATUS.restricted]: "#f0ad00",
   [NLB_STATUS.offline]: "#c1121f",
   [NLB_STATUS.planned]: "#0d6efd",
+  [NLB_STATUS.unspecified]: "#b77900",
+  [NLB_STATUS.unknown]: "#64748b",
 };
 
 const NLB_DEFAULT_CENTER = { lat: 48.7419, lon: 9.3046 };
 const NLB_DEFAULT_PAGE_SIZE = 20;
 const NLB_DEFAULT_ZOOM = 12;
-const NLB_DEFAULT_MIN_ACTIVE_PER_DISTRICT = 1;
 const NLB_DEFAULT_OVERDUE_AFTER_DAYS = 180;
 const NLB_ASSETS = {};
 
@@ -40,23 +45,19 @@ const nlbInstances = new Map();
 function teardownNotfallInstanz(state, container) {
   state.disposed = true;
   if (state.controller) state.controller.abort();
-  if (state.map) {
-      try {
-        state.map.remove();
-      } catch (error) {
-        console.warn("Fehler beim Entfernen der Leaflet-Karte:", error);
-      }
-      state.map = null;
-    }
-    if (state.chart) {
-      try {
-        state.chart.destroy();
-      } catch (error) {
-        console.warn("Fehler beim Zerstören des Charts:", error);
-      }
-      state.chart = null;
-    }
-    nlbInstances.delete(container);
+  if (state.events) state.events.abort();
+  if (state.detailPanel) {
+    const panel = state.detailPanel, element = state.detailElement;
+    if (element && ["show","showing","hiding"].some(name => element.classList.contains(name))) {
+      element.addEventListener("hidden.bs.offcanvas", () => panel.dispose(), {once:true});
+      if (!element.classList.contains("hiding")) panel.hide();
+    } else panel.dispose();
+    state.detailPanel = null;
+  }
+  if (state.map) {state.map.remove();state.map = null;}
+  if (state.chart) {state.chart.destroy();state.chart = null;}
+  if (state.markersByKey) state.markersByKey.clear();
+  nlbInstances.delete(container);
 }
 
 function onPageLeave(page) {
@@ -82,7 +83,20 @@ function app(configdata = {}, enclosingHtmlDivElement) {
     sortDirection: "asc",
     page: 1,
     pageSize: NLB_DEFAULT_PAGE_SIZE,
-    quickFilter: "",
+    selection: "",
+    dataset: null,
+    view: null,
+    hasSuccessfulLoad: false,
+    lastSuccessfulFetch: null,
+    loading: false,
+    loadError: "",
+    requestId: 0,
+    events: new AbortController(),
+    selectedRecordKey: null,
+    detailTrigger: null,
+    detailPanel: null,
+    detailElement: null,
+    markersByKey: new Map(),
     showRadius: false,
     map: null,
     markerLayer: null,
@@ -144,9 +158,10 @@ function renderWeitereInfos(config = {}, uid) {
 function renderMethodikbox(config = {}, uid) {
   const hinweis = String(config.datenquelleHinweis || "").trim();
   const stand = String(config.datenStand || "").trim();
-  if (!hinweis && !stand) return "";
+  const sources = renderEmergencySourceLinks(config);
+  if (!hinweis && !stand && !sources) return "";
   const standHtml = stand
-    ? `<p class="text-muted small mb-2">${escapeHtml(stand)}</p>`
+    ? `<p class="text-muted small mb-2">Quellenangabe (manuell): ${escapeHtml(stand)}</p>`
     : "";
   return (
     '<section class="nlb-section nlb-methodik">' +
@@ -157,97 +172,94 @@ function renderMethodikbox(config = {}, uid) {
     '<div id="nlb-methodik-body-' + uid + '" class="collapse nlb-methodik-body">' +
     standHtml +
     hinweis +
+    sources +
     "</div>" +
     "</section>"
   );
 }
 
 async function initializeEmergencyDashboard(state) {
-  const quelle = String(state.config.apiurl || "").trim();
-  if (!quelle || /^\{\{.*\}\}$/.test(quelle) || /^<.*>$/.test(quelle)) {
-    setEmergencyLoading(state, "");
-    renderOdasFehler(state.host, new Error("Keine Datenquelle konfiguriert."), {
-      url: quelle,
-      label: "Standorte-API",
-      typLabel: "Datei-Download",
-      erwarteterTyp: "ckan-dl",
-    });
-    return;
-  }
-  // Variante A (F-92): Typprüfung vor dem ersten Fetch.
-  const nlbTypWarn = validateUrlTypErwartung(quelle, "ckan-dl");
-  if (nlbTypWarn) {
-    setEmergencyLoading(state, "");
-    renderOdasFehler(state.host, new Error(nlbTypWarn), {
-      url: quelle,
-      label: "Standorte-API",
-      typLabel: "Datei-Download",
-      erwarteterTyp: "ckan-dl",
-    });
-    return;
-  }
-
-  setEmergencyLoading(state, "Daten und Kartenbibliotheken werden geladen ...");
-
-  const libraryPromises =
-    typeof document === "undefined"
-      ? []
-      : [
-          loadLeafletLibrary().then((loaded) => {
-            state.libraryState.leaflet = loaded;
-          }),
-          loadMarkerClusterLibrary().then((loaded) => {
-            state.libraryState.markerCluster = loaded;
-          }),
-          loadChartLibrary().then((loaded) => {
-            state.libraryState.chart = loaded;
-          }),
-        ];
-
-  try {
-    const [records] = await Promise.all([
-      loadEmergencyRecords(state.config, state.controller.signal),
-      ...libraryPromises,
-    ]);
+  const load = (key, loader) => loader().then(loaded => {
     if (state.disposed) return;
-    state.allRecords = records;
-    state.mapCenter = deriveEmergencyMapCenter(records);
-    populateEmergencyFilters(state);
-    setEmergencyLoading(state, "");
-    if (records.length === 0) {
-      showEmergencyAlert(state, "Keine Datensätze in der Datenquelle gefunden.", "info");
-    } else {
-      showEmergencyAlert(state, "");
+    state.libraryState[key] = loaded;
+    // Optionale Ansichten dürfen den Datenbestand nicht aufhalten oder später die Karte zurücksetzen.
+    if (loaded && state.hasSuccessfulLoad) {
+      if (key === "chart") updateEmergencyChart(state);
+      else updateEmergencyMap(state,{fit:!state.map});
     }
+  });
+  state.librariesReady = typeof document === "undefined" || validateEmergencySourceUrl(state.config.apiurl) ?
+    Promise.resolve() : Promise.all([
+      load("leaflet",loadLeafletLibrary), load("markerCluster",loadMarkerClusterLibrary), load("chart",loadChartLibrary),
+    ]);
+  await refreshEmergencyDashboard(state);
+}
+
+async function refreshEmergencyDashboard(state) {
+  if (state.disposed || state.loading) return;
+  const requestId = ++state.requestId;
+  if (state.controller) state.controller.abort();
+  state.controller = new AbortController();
+  state.loading = true;
+  const button = state.host.querySelector('[data-nlb-action="reload"]');
+  button.disabled = true;
+  state.host.querySelector(".nlb-app").setAttribute("aria-busy","true");
+  setEmergencyLoading(state,state.hasSuccessfulLoad ?
+    "Neue Daten werden geladen – angezeigt bleibt der letzte erfolgreiche Bestand." : "Standortdaten werden geladen …");
+  try {
+    const dataset = await loadEmergencyRecords(state.config,state.controller.signal);
+    if (state.disposed || requestId !== state.requestId) return;
+    const previousFilters = collectEmergencyFilters(state);
+    const selected = state.allRecords.find(record => record._key===state.selectedRecordKey);
+    const sourceId = selected && selected._sourceId != null &&
+      state.allRecords.filter(record => record._sourceId===selected._sourceId).length===1 ? selected._sourceId : null;
+    const wasOpen = state.detailElement && state.detailElement.classList.contains("show");
+    state.selectedRecordKey = null;
+    state.dataset = dataset; state.allRecords = dataset.records;
+    state.hasSuccessfulLoad = true; state.lastSuccessfulFetch = new Date(); state.loadError = "";
+    state.mapCenter = deriveEmergencyMapCenter(dataset.records); state.page = 1;
+    populateEmergencyFilters(state);
+    const removed = Object.entries(previousFilters).filter(([key,value]) => key!=="search" && value &&
+      state.host.querySelector(`#nlb-filter-${key}-${state.uid}`).value !== value).map(([key]) =>
+        state.host.querySelector(`label[for="nlb-filter-${key}-${state.uid}"]`).textContent);
     updateEmergencyDashboard(state);
+    const matches = sourceId == null ? [] : state.allRecords.filter(record => record._sourceId===sourceId);
+    const restored = matches.length===1 && state.filteredRecords.find(record => record._key===matches[0]._key);
+    if (restored) {
+      state.selectedRecordKey = restored._key;
+      if (wasOpen) openEmergencyDetails(state,restored._key,
+        state.host.querySelector(`[data-nlb-action="details"][data-record-key="${restored._key}"]`));
+    } else if (state.detailPanel) closeEmergencyDetails(state);
+    const notices = [];
+    if (!dataset.records.length) notices.push("Keine Standorte in der Quelle.");
+    if (removed.length) notices.push("Auswahl aufgehoben, da nicht mehr vorhanden: " + removed.join(", ") + ".");
+    showEmergencyAlert(state,notices.join(" "),"info");
   } catch (error) {
-    if (state.disposed) return;
+    if (state.disposed || requestId !== state.requestId) return;
     if (error && error.name === "AbortError") return;
-    console.error("Notfall-Lagebild konnte nicht geladen werden:", error);
-    state.allRecords = [];
-    setEmergencyLoading(state, "");
-    renderOdasFehler(state.host, error, {
-      url: String(state.config.apiurl || "").trim(),
-      label: "Standorte-API",
-      typLabel: "Datei-Download",
-      erwarteterTyp: "ckan-dl",
-    });
-    // renderOdasFehler ersetzt die komplette App-Schale; Dashboard-Updates
-    // danach waeren wirkungslos bzw. wuerfen Fehler (kein Null-Check in
-    // setEmergencyLoading), daher frueher Ausstieg.
+    state.loadError = String(error.message || error);
+    if (state.hasSuccessfulLoad) {
+      showEmergencyAlert(state,`Aktualisierung fehlgeschlagen – letzter erfolgreicher Abruf: ${state.lastSuccessfulFetch.toLocaleString("de-DE")}. ${state.loadError}`);
+    } else {
+      showEmergencyAlert(state,`Standortdaten konnten nicht geladen werden. ${state.loadError}`,
+        isKeineDatenquelleKonfiguriert(state.config.apiurl) ? "info" : "danger");
+      setText(state,`nlb-data-status-${state.uid}`,"Kein erfolgreich geladener Datenbestand.");
+    }
+  } finally {
+    if (!state.disposed && requestId === state.requestId) {
+      state.loading = false; button.disabled = false;
+      state.host.querySelector(".nlb-app").setAttribute("aria-busy","false");
+      setEmergencyLoading(state,"");
+    }
   }
 }
 
-async function loadEmergencyRecords(config, signal) {
-  if (!config.apiurl) {
-    return [];
-  }
-
+async function loadEmergencyRecords(config, signal, referenceDate = new Date()) {
+  const warning = validateEmergencySourceUrl(config.apiurl);
+  if (warning) throw new Error(warning);
   const rawText = await fetchEmergencyText(config.apiurl, config, signal);
-  const rawRecords = await parseEmergencyData(rawText);
-  const records = rawRecords.map((record, index) => normalizeEmergencyRecord(record, index));
-
-  return records;
+  const parsed = await parseEmergencyData(rawText);
+  return normalizeEmergencyRecords(parsed.rows, referenceDate, parsed.rejectedRows);
 }
 
 async function fetchEmergencyText(url, config, signal) {
@@ -328,6 +340,7 @@ async function fetchOdasResource(targetUrl, configdata = {}, options = {}) {
 
   try {
     const response = await fetch(targetUrl, {
+      cache: "no-store",
       signal: options && options.signal ? options.signal : undefined,
     });
     if (!response.ok) {
@@ -381,148 +394,29 @@ function isKeineDatenquelleKonfiguriert(targetUrl) {
 }
 
 
-const TYP_BEZEICHNUNG = {
-  "ckan-dkan-ds": "Tabellen-API mit Daten-ID",
-  "ckan-ps": "Datensatz-API",
-  "ckan-dl": "Datei-Download",
-  "ods21": "Open-Data-Suche (API v2.1)",
-  "wfs": "Kartendienst (WFS)",
-  "sparql": "Wissensdatenbank (SPARQL)",
-  "csv-zip": "Statische Datei"
-};
-
-function validateUrlTypErwartung(url, erwarteterTyp) {
-  const u = String(url || "");
-  if (!erwarteterTyp || isKeineDatenquelleKonfiguriert(u)) return null;
-  const checks = {
-    "ckan-dkan-ds": /\/api\/3\/action\/datastore_search\?resource_id=/i,
-    "ckan-ps": /\/api\/3\/action\/package_show\?id=/i,
-    "ckan-dl": /\/dataset\/.*\/resource\/.*\/download\//i,
-    "ods21": /\/api\/explore\/v2\.1\//i,
-    "wfs": /service=WFS/i,
-    "sparql": /\/api\/ts\/v1\/kg\/sparql/i,
-    "csv-zip": /\.(csv|json|zip)(\?|$)/i
-  };
-  const re = checks[erwarteterTyp];
-  if (!re) return null;
-  if (!re.test(u)) {
-    const soll = TYP_BEZEICHNUNG[erwarteterTyp] || erwarteterTyp;
-    return `Typ passt nicht: erwartet „${soll}", erhalten „${u.slice(0, 60)}…". Prüfen Sie den Hilfe-Tooltip bei „URLs zu Datenressourcen".`;
+function validateEmergencySourceUrl(url) {
+  if (isKeineDatenquelleKonfiguriert(url)) return "Keine Datenquelle konfiguriert.";
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) return "Bitte eine vollständige HTTP(S)-JSON-/CSV-Ressource konfigurieren.";
+    if (/\/api\/3\/action\/datastore_search(?:_sql)?\/?$/i.test(parsed.pathname)) {
+      return "Bitte einen vollständigen JSON-/CSV-Export statt einer CKAN-Datastore-API konfigurieren.";
+    }
+    return null;
+  } catch (_error) {
+    return "Bitte eine gültige vollständige HTTP(S)-JSON-/CSV-Ressource konfigurieren.";
   }
-  return null;
 }
-
-function classifyOdasFehler(error, kontext = {}) {
-  const msg = String((error && error.message) || error || "");
-  const url = String(kontext.url || "");
-  const label = String(kontext.label || "Datenressource");
-  const typLabel = String(kontext.typLabel || TYP_BEZEICHNUNG[kontext.erwarteterTyp] || "Datenquelle");
-  if (/Keine Datenquelle konfiguriert/i.test(msg) || isKeineDatenquelleKonfiguriert(url)) {
-    return {
-      kind: "KEINE_QUELLE",
-      titel: "Es ist keine Datenquelle konfiguriert.",
-      hinweis: `Prüfen Sie unter „URLs zu Datenressourcen → ${label}" ob eine gültige ${typLabel}-URL eingetragen ist (Hilfe-Tooltip beachten).`,
-      detail: msg,
-      alertClass: "alert-info"
-    };
-  }
-  if (/Typ passt nicht: erwartet/i.test(msg)) {
-    return {
-      kind: "TYP_MISMATCH",
-      titel: msg,
-      hinweis: `Diese App erwartet ${typLabel}. Korrigieren Sie die URL gemäß Hilfe-Tooltip (Beispiel dort).`,
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/URL origin not allowed/i.test(msg)) {
-    return {
-      kind: "PROXY_ORIGIN",
-      titel: "ODAS-Proxy blockiert: Ziel-Origin nicht freigegeben.",
-      hinweis: "Tragen Sie die Ziel-Origin als eigenen Eintrag unter „URLs zu Datenressourcen“ ein oder prüfen Sie proxyAktiv.",
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/ODAS-Proxy-Fehler/i.test(msg) || /kein content-String/i.test(msg)) {
-    return {
-      kind: "PROXY_HTTP",
-      titel: msg,
-      hinweis: "Prüfen Sie proxyAktiv und Erreichbarkeit im ODAS-Live-System (lokal 404 ist normal).",
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/Direkter Datenabruf fehlgeschlagen/i.test(msg) || /Failed to fetch/i.test(msg)) {
-    const corsHint = /Failed to fetch/i.test(msg) ? " – vermutlich CORS blockiert → im ODAS-Live proxyAktiv=ja." : "";
-    return {
-      kind: "DIREKT_CORS_HTTP",
-      titel: msg,
-      hinweis: `Prüfen Sie URL und CORS der Quelle${corsHint}`,
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/liefert kein JSON/i.test(msg) || /HTML-Seite|CSV-|leere Antwort|unlesbaren/i.test(msg)) {
-    return {
-      kind: "PAYLOAD_TYP",
-      titel: msg,
-      hinweis: "Tragen Sie den passenden Endpunkt ein – nicht die Datensatzseite (/dataset/…) – Hilfe-Tooltip beachten.",
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/CKAN.*Fehler|success:false/i.test(msg)) {
-    return {
-      kind: "CKAN_API",
-      titel: msg,
-      hinweis: "Prüfen Sie Daten-ID / Datensatz-ID (existiert die Tabelle/Datei noch auf dem Portal?).",
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  if (/404|Nicht gefunden/i.test(msg)) {
-    return {
-      kind: "HTTP_404",
-      titel: msg,
-      hinweis: "Ressource/Datensatz auf dem Portal nicht gefunden (404).",
-      detail: msg,
-      alertClass: "alert-danger"
-    };
-  }
-  return {
-    kind: "UNBEKANNT",
-    titel: msg || "Unbekannter Fehler beim Laden.",
-    hinweis: "Prüfen Sie Konfiguration und Erreichbarkeit der Quelle.",
-    detail: msg,
-    alertClass: "alert-danger"
-  };
-}
-
-function renderOdasFehler(container, error, kontext = {}) {
-  if (!container) return;
-  const typWarn = validateUrlTypErwartung(kontext.url, kontext.erwarteterTyp);
-  if (typWarn && !/Typ passt nicht/i.test(String(error && error.message))) {
-    error = new Error(typWarn);
-  }
-  const info = classifyOdasFehler(error, kontext);
-  const url = String(kontext.url || "");
-  const urlZeile = url ? `<p class="mb-1 small text-muted">Konfigurierte URL: <code>${escapeHtml(url.length > 80 ? url.slice(0, 80) + "…" : url)}</code></p>` : "";
-  const titel = kontext.leer ? "Keine Datensätze gefunden." : info.titel;
-  const alertClass = kontext.leer ? "alert-info" : info.alertClass;
-  container.innerHTML = `<div class="alert ${alertClass}" role="alert"><strong>${escapeHtml(titel)}</strong><p class="mb-1">${escapeHtml(info.hinweis)}</p>${urlZeile}<details class="small"><summary>Details</summary><code>${escapeHtml(info.detail || String(error))}</code></details></div>`;
-}
-
 
 async function parseEmergencyData(rawText) {
   const trimmed = String(rawText || "").trim();
-  if (!trimmed) return [];
-
+  if (!trimmed) throw new Error("Die Datenquelle liefert eine leere Antwort statt einer Standortliste.");
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    const json = JSON.parse(trimmed);
-    return extractEmergencyRecords(json);
+    let json;
+    try { json = JSON.parse(trimmed); }
+    catch (_error) { throw new Error("Die Datenquelle liefert kein lesbares JSON."); }
+    return { rows: extractEmergencyRecords(json), rejectedRows: 0 };
   }
-
   await loadPapaparseLibrary();
   return parseEmergencyCsv(trimmed);
 }
@@ -540,94 +434,173 @@ function deriveEmergencyDescription(config = {}) {
 }
 
 function extractEmergencyRecords(json) {
+  if (!json || json.success === false) throw new Error("Unbekanntes Antwortformat: Standortliste erwartet.");
   if (Array.isArray(json)) return json;
-  if (Array.isArray(json.records)) return json.records;
-  if (Array.isArray(json.results)) return json.results;
-  if (Array.isArray(json.data)) return json.data;
-  if (json.result && Array.isArray(json.result.records)) return json.result.records;
-  if (json.result && Array.isArray(json.result.results)) return json.result.results;
-  return [];
+  const envelopes = [json, json.result].filter(value => value && typeof value === "object");
+  const envelope = envelopes.find(value =>
+    ["records", "results", "data"].some(key => Array.isArray(value[key])));
+  if (!envelope) throw new Error("Unbekanntes Antwortformat: Standortliste erwartet.");
+  const rows = ["records", "results", "data"].map(key => envelope[key]).find(Array.isArray);
+  for (const value of envelopes) {
+    const partial = ["total", "total_count"].some(key =>
+      value[key] != null && Number.isFinite(Number(value[key])) && Number(value[key]) > rows.length);
+    if (partial || value.next) {
+      throw new Error("Die Quelle liefert nur einen Ausschnitt. Bitte eine vollständige JSON-/CSV-Ressource konfigurieren.");
+    }
+  }
+  return rows;
 }
 
 function parseEmergencyCsv(csvText) {
-  const result = Papa.parse(csvText, { header: true, skipEmptyLines: "greedy" });
-  return Array.isArray(result.data) ? result.data : [];
+  const result = Papa.parse(csvText, {
+    header: true, skipEmptyLines: "greedy", transformHeader: value => value.trim(),
+  });
+  const fields = result.meta.fields || [];
+  if (!fields.some(field => ["id", "kennung", "objectid", "name", "bezeichnung", "title"].includes(field))) {
+    throw new Error("Die CSV-Datei enthält keine erkennbaren Standortfelder (Name oder Kennung).");
+  }
+  if (result.errors.some(error => error.type !== "FieldMismatch" && error.type !== "Delimiter")) {
+    throw new Error("Die CSV-Datei ist nicht lesbar. Bitte Anführungszeichen und Zeilenstruktur prüfen.");
+  }
+  const rejected = new Set(result.errors.filter(error => error.type === "FieldMismatch").map(error => error.row));
+  return { rows: result.data.filter((_row, index) => !rejected.has(index)), rejectedRows: rejected.size };
 }
 
-function normalizeEmergencyRecord(rawRecord = {}, index = 0) {
-  const maxCapacity = parseInteger(
-    pickValue(rawRecord, ["kapazitaet_max", "kapazitaetMax", "capacity_max", "max_capacity"]),
-    0
-  );
-  const freeCapacity = parseInteger(
-    pickValue(rawRecord, [
-      "kapazitaet_verfuegbar",
-      "kapazitaetVerfuegbar",
-      "capacity_available",
-      "free_capacity",
-    ]),
-    0
-  );
-  const suppliedUtilization = pickValue(rawRecord, [
-    "auslastung_prozent",
-    "auslastungProzent",
-    "utilization_percent",
-  ]);
-  const utilization = Number.isFinite(parseFiniteNumber(suppliedUtilization, NaN))
-    ? parseInteger(suppliedUtilization, 0)
-    : maxCapacity > 0
-      ? Math.max(0, Math.min(100, Math.round(((maxCapacity - freeCapacity) / maxCapacity) * 100)))
-      : 0;
+function emergencyText(value) {
+  return (typeof value === "string" || (typeof value === "number" && Number.isFinite(value))) ? String(value).trim() : "";
+}
 
-  const normalized = {
-    id: String(pickValue(rawRecord, ["id", "kennung", "objectid"]) || `NLB-${index + 1}`),
-    name: String(pickValue(rawRecord, ["name", "bezeichnung", "title"]) || "Unbenannter Standort"),
-    typ: String(pickValue(rawRecord, ["typ", "type", "kategorie"]) || "Sonstiger Standort"),
-    untertyp: String(pickValue(rawRecord, ["untertyp", "subtype", "unterkategorie"]) || ""),
-    status: normalizeEmergencyStatus(pickValue(rawRecord, ["status", "zustand"]) || NLB_STATUS.planned),
-    kapazitaet_max: maxCapacity,
-    kapazitaet_verfuegbar: freeCapacity,
-    auslastung_prozent: utilization,
-    strasse: String(pickValue(rawRecord, ["strasse", "strasze", "street"]) || ""),
-    plz: String(pickValue(rawRecord, ["plz", "zip", "postal_code"]) || ""),
-    ort: String(pickValue(rawRecord, ["ort", "city", "kommune"]) || ""),
-    stadtteil: String(pickValue(rawRecord, ["stadtteil", "bezirk", "district"]) || "Nicht zugeordnet"),
-    lat: parseFiniteNumber(pickValue(rawRecord, ["lat", "latitude", "y"]), NaN),
-    lon: parseFiniteNumber(pickValue(rawRecord, ["lon", "lng", "longitude", "x"]), NaN),
-    barrierefrei: parseBoolean(pickValue(rawRecord, ["barrierefrei", "accessible"])),
-    stromversorgung_notstrom: parseBoolean(
-      pickValue(rawRecord, ["stromversorgung_notstrom", "notstrom", "emergency_power"])
-    ),
-    wasser_verfuegbar: parseBoolean(pickValue(rawRecord, ["wasser_verfuegbar", "wasser", "water"])),
-    sanitaer_verfuegbar: parseBoolean(
-      pickValue(rawRecord, ["sanitaer_verfuegbar", "sanitaer", "sanitary"])
-    ),
-    betreiber: String(pickValue(rawRecord, ["betreiber", "operator", "traeger"]) || ""),
-    ansprechpartner: String(pickValue(rawRecord, ["ansprechpartner", "contact"]) || ""),
-    letzte_pruefung: String(pickValue(rawRecord, ["letzte_pruefung", "letztePruefung", "last_check"]) || ""),
-    prioritaet: normalizePriority(pickValue(rawRecord, ["prioritaet", "priority"]) || "mittel"),
-    hinweis: String(pickValue(rawRecord, ["hinweis", "note", "beschreibung"]) || ""),
+function normalizeEmergencyRecord(rawRecord, index = 0, referenceDate = new Date()) {
+  if (!rawRecord || typeof rawRecord !== "object" || Array.isArray(rawRecord)) return null;
+  const sourceId = emergencyText(pickValue(rawRecord, ["id", "kennung", "objectid"])) || null;
+  const name = emergencyText(pickValue(rawRecord, ["name", "bezeichnung", "title"]));
+  if (!sourceId && !name) return null;
+  const issues = [];
+  const field = (key, aliases, parse) => {
+    const raw = pickValue(rawRecord, aliases);
+    const value = parse(raw);
+    if (value == null || (key === "status" && value === NLB_STATUS.unknown)) {
+      issues.push({ field: key, reason: raw == null || (typeof raw === "string" && raw.trim() === "") ? "missing" : "invalid" });
+    }
+    return value;
   };
+  const count = value => {
+    if (!["number", "string"].includes(typeof value)) return null;
+    const n = parseFiniteNumber(value, NaN);
+    return Number.isInteger(n) && n >= 0 ? n : null;
+  };
+  const coordinate = (value, bound) => {
+    if (!["number", "string"].includes(typeof value)) return null;
+    const n = parseFiniteNumber(value, NaN);
+    return Number.isFinite(n) && Math.abs(n) <= bound ? n : null;
+  };
+  const max = field("kapazitaet_max", ["kapazitaet_max","kapazitaetMax","capacity_max","max_capacity"], count);
+  const free = field("kapazitaet_verfuegbar", ["kapazitaet_verfuegbar","kapazitaetVerfuegbar","capacity_available","free_capacity"], value => {
+    const n = count(value);
+    return n != null && max != null && n > max ? null : n;
+  });
+  const suppliedUtilization = pickValue(rawRecord, ["auslastung_prozent","auslastungProzent","utilization_percent"]);
+  const utilization = count(suppliedUtilization);
+  const rawStatus = pickValue(rawRecord, ["status","zustand"]);
+  const record = {
+    id: sourceId || `NLB-${index + 1}`, _sourceId: sourceId, _key: `row-${index}`,
+    name: name || `Standort ${sourceId}`,
+    typ: field("typ", ["typ","type","kategorie"], value => emergencyText(value) || null),
+    untertyp: emergencyText(pickValue(rawRecord, ["untertyp","subtype","unterkategorie"])),
+    status: field("status", ["status","zustand"], normalizeEmergencyStatus),
+    _rawStatus: emergencyText(rawStatus),
+    kapazitaet_max: max, kapazitaet_verfuegbar: free,
+    auslastung_prozent: utilization != null && utilization <= 100 ? utilization :
+      (max > 0 && free != null ? Math.round((max - free) / max * 100) : null),
+    strasse: emergencyText(pickValue(rawRecord, ["strasse","strasze","street"])),
+    plz: emergencyText(pickValue(rawRecord, ["plz","zip","postal_code"])),
+    ort: emergencyText(pickValue(rawRecord, ["ort","city","kommune"])),
+    stadtteil: field("stadtteil", ["stadtteil","bezirk","district"], value =>
+      normalizeSearchText(value) === "nicht zugeordnet" ? null : emergencyText(value) || null),
+    lat: field("lat", ["lat","latitude","y"], value => coordinate(value,90)),
+    lon: field("lon", ["lon","lng","longitude","x"], value => coordinate(value,180)),
+    barrierefrei: field("barrierefrei", ["barrierefrei","accessible"], parseBoolean),
+    stromversorgung_notstrom: field("stromversorgung_notstrom", ["stromversorgung_notstrom","notstrom","emergency_power"], parseBoolean),
+    wasser_verfuegbar: field("wasser_verfuegbar", ["wasser_verfuegbar","wasser","water"], parseBoolean),
+    sanitaer_verfuegbar: field("sanitaer_verfuegbar", ["sanitaer_verfuegbar","sanitaer","sanitary"], parseBoolean),
+    betreiber: emergencyText(pickValue(rawRecord, ["betreiber","operator","traeger"])),
+    ansprechpartner: emergencyText(pickValue(rawRecord, ["ansprechpartner","contact"])),
+    letzte_pruefung: field("letzte_pruefung", ["letzte_pruefung","letztePruefung","last_check"], value =>
+      getEmergencyCheckAgeDays(value,referenceDate) == null ? null : emergencyText(value)),
+    prioritaet: field("prioritaet", ["prioritaet","priority"], normalizePriority),
+    hinweis: emergencyText(pickValue(rawRecord, ["hinweis","note","beschreibung"])),
+    _issues: issues,
+  };
+  if (!sourceId) issues.push({field:"id",reason:"missing"});
+  if (!name) issues.push({field:"name",reason:"missing"});
+  record._searchText = normalizeSearchText([
+    record.id, record.name, record.typ, record.untertyp, record.status, record._rawStatus,
+    record.strasse, record.plz, record.ort, record.stadtteil, record.betreiber,
+    record.ansprechpartner, record.prioritaet, record.hinweis,
+  ].join(" "));
+  return record;
+}
 
-  normalized._searchText = normalizeSearchText(
-    [
-      normalized.id,
-      normalized.name,
-      normalized.typ,
-      normalized.untertyp,
-      normalized.status,
-      normalized.strasse,
-      normalized.plz,
-      normalized.ort,
-      normalized.stadtteil,
-      normalized.betreiber,
-      normalized.ansprechpartner,
-      normalized.prioritaet,
-      normalized.hinweis,
-    ].join(" ")
-  );
+function normalizeEmergencyRecords(rows, referenceDate = new Date(), rejectedRows = 0) {
+  const records = rows.map((row,index) => normalizeEmergencyRecord(row,index,referenceDate)).filter(Boolean);
+  const quality = {
+    total: rows.length + rejectedRows, usable: records.length,
+    discarded: rows.length - records.length + rejectedRows, duplicateIds: 0,
+    unmapped: 0, unknown: Object.create(null), invalid: Object.create(null),
+  };
+  if (quality.total && !records.length) throw new Error("Die Quelle enthält keine auswertbaren Standorte.");
+  const ids = new Map();
+  records.forEach(record => {
+    if (record._sourceId != null) ids.set(record._sourceId, (ids.get(record._sourceId) || 0) + 1);
+  });
+  records.forEach(record => {
+    if (record._sourceId != null && ids.get(record._sourceId) > 1) {
+      quality.duplicateIds++;
+      record._issues.push({field:"id",reason:"duplicate"});
+    }
+    if (!hasEmergencyCoordinates(record)) quality.unmapped++;
+    record._issues.forEach(issue => {
+      if (issue.reason === "duplicate") return;
+      quality.unknown[issue.field] = (quality.unknown[issue.field] || 0) + 1;
+      if (issue.reason === "invalid") quality.invalid[issue.field] = (quality.invalid[issue.field] || 0) + 1;
+    });
+  });
+  return {records, quality};
+}
 
-  return normalized;
+function hasEmergencyCoordinates(record) {
+  return Number.isFinite(record.lat) && Math.abs(record.lat) <= 90 &&
+    Number.isFinite(record.lon) && Math.abs(record.lon) <= 180;
+}
+
+function getEmergencyCheckAgeDays(value, referenceDate = new Date()) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return null;
+  const [year, month, day] = value.trim().split("-").map(Number);
+  const checked = new Date(0);
+  checked.setUTCFullYear(year, month - 1, day);
+  checked.setUTCHours(0,0,0,0);
+  if (checked.getUTCFullYear() !== year || checked.getUTCMonth() !== month - 1 || checked.getUTCDate() !== day) return null;
+  const today = new Date(0);
+  today.setUTCFullYear(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+  today.setUTCHours(0,0,0,0);
+  const days = (today.getTime() - checked.getTime()) / 86400000;
+  return Number.isFinite(days) && days >= 0 ? days : null;
+}
+
+function renderEmergencyQuality(state) {
+  const element = state.host.querySelector(`#nlb-quality-${state.uid}`);
+  if (!element || !state.dataset) return;
+  const q = state.dataset.quality;
+  const incomplete = state.dataset.records.filter(record => record._issues.length > 0).length;
+  element.textContent = [
+    q.discarded ? `Teilbestand: ${q.discarded} unbrauchbare Einträge ausgeschlossen.` : "",
+    `Datenqualität im Gesamtbestand: ${q.usable} Standorte ausgewertet; ${q.unmapped} ohne gültige Kartenposition.`,
+    incomplete ? `${incomplete} Standorte mit fehlenden oder ungültigen Angaben.` : "",
+    q.unknown.status ? `Status unbekannt: ${q.unknown.status}.` : "",
+    q.unknown.kapazitaet_verfuegbar ? `Freie Kapazität unbekannt/ungültig: ${q.unknown.kapazitaet_verfuegbar}.` : "",
+    q.duplicateIds ? `${q.duplicateIds} Standorte mit mehrfacher Quellkennung.` : "",
+  ].filter(Boolean).join(" ");
+  element.className = "nlb-quality " + (q.discarded || incomplete ? "alert alert-warning" : "text-muted small");
 }
 
 function pickValue(record, keys) {
@@ -642,7 +615,7 @@ function pickValue(record, keys) {
 function normalizeEmergencyStatus(value) {
   const normalized = normalizeSearchText(value);
   if (["aktiv", "active", "einsatzbereit"].includes(normalized)) return NLB_STATUS.active;
-  if (["eingeschraenkt", "eingeschrankt", "restricted", "stoerung", "storung"].includes(normalized)) {
+  if (["eingeschraenkt", "eingeschrankt", "restricted"].includes(normalized)) {
     return NLB_STATUS.restricted;
   }
   if (
@@ -659,20 +632,29 @@ function normalizeEmergencyStatus(value) {
     return NLB_STATUS.offline;
   }
   if (["geplant", "planned", "planung"].includes(normalized)) return NLB_STATUS.planned;
-  return String(value || NLB_STATUS.planned);
+  if (["gestoert", "gestort", "stoerung", "storung"].includes(normalized)) return NLB_STATUS.unspecified;
+  return NLB_STATUS.unknown;
+}
+
+function isEmergencyDisrupted(status) {
+  return [NLB_STATUS.restricted, NLB_STATUS.offline, NLB_STATUS.unspecified].includes(status);
 }
 
 function normalizePriority(value) {
   const normalized = normalizeSearchText(value);
   if (["hoch", "high", "1"].includes(normalized)) return "hoch";
+  if (["mittel", "medium", "2"].includes(normalized)) return "mittel";
   if (["niedrig", "low", "3"].includes(normalized)) return "niedrig";
-  return "mittel";
+  return null;
 }
 
 function parseBoolean(value) {
   if (typeof value === "boolean") return value;
+  if (!["string", "number"].includes(typeof value)) return null;
   const normalized = normalizeSearchText(value);
-  return ["ja", "j", "yes", "true", "1", "x", "vorhanden"].includes(normalized);
+  if (["ja", "j", "yes", "true", "1", "x", "vorhanden"].includes(normalized)) return true;
+  if (["nein", "n", "no", "false", "0", "nicht vorhanden"].includes(normalized)) return false;
+  return null;
 }
 
 function parseInteger(value, fallback = 0) {
@@ -709,93 +691,86 @@ function deriveEmergencyMapCenter(records) {
   };
 }
 
-function calculateEmergencyMetrics(records, options = {}) {
-  const minActivePerDistrict = parseInteger(
-    options.minActivePerDistrict,
-    NLB_DEFAULT_MIN_ACTIVE_PER_DISTRICT
-  );
-  const overdueAfterDays = parseInteger(
-    options.overdueAfterDays,
-    NLB_DEFAULT_OVERDUE_AFTER_DAYS
-  );
-  const referenceDate = options.referenceDate || new Date();
-  const districts = new Set();
-  const activeByDistrict = {};
-
-  let activeLocations = 0;
-  let disruptedLocations = 0;
-  let freeCapacity = 0;
-  let overdueChecks = 0;
-
-  records.forEach((record) => {
-    const district = record.stadtteil || "Nicht zugeordnet";
-    districts.add(district);
-    freeCapacity += parseInteger(record.kapazitaet_verfuegbar, 0);
-
-    if (record.status === NLB_STATUS.active) {
-      activeLocations += 1;
-      activeByDistrict[district] = (activeByDistrict[district] || 0) + 1;
+function filterEmergencyAreaRecords(records, filters = {}) {
+  const search = normalizeSearchText(filters.search || "");
+  return records.filter(record => {
+    for (const key of ["typ","untertyp","stadtteil","betreiber"]) {
+      if (filters[key] && record[key] !== filters[key]) return false;
     }
-
-    if ([NLB_STATUS.restricted, NLB_STATUS.offline].includes(record.status)) {
-      disruptedLocations += 1;
+    if (filters.prioritaet && record.prioritaet !== (filters.prioritaet === "__unknown__" ? null : filters.prioritaet)) return false;
+    for (const [filter, field] of [["barrierefrei","barrierefrei"],["notstrom","stromversorgung_notstrom"]]) {
+      if (!filters[filter]) continue;
+      const wanted = filters[filter] === "__unknown__" ? null : filters[filter] === "ja";
+      if (record[field] !== wanted) return false;
     }
-
-    if (isEmergencyCheckOverdue(record, overdueAfterDays, referenceDate)) {
-      overdueChecks += 1;
-    }
+    return !search || record._searchText.includes(search);
   });
-
-  const underservedDistricts = [...districts].filter(
-    (district) => (activeByDistrict[district] || 0) < minActivePerDistrict
-  ).length;
-
-  return {
-    activeLocations,
-    disruptedLocations,
-    freeCapacity,
-    underservedDistricts,
-    overdueChecks,
-  };
 }
 
-function isEmergencyCheckOverdue(
-  record,
-  overdueAfterDays = NLB_DEFAULT_OVERDUE_AFTER_DAYS,
-  referenceDate = new Date()
-) {
-  if (!record.letzte_pruefung) return false;
-  const checkedAt = new Date(record.letzte_pruefung);
-  if (Number.isNaN(checkedAt.getTime())) return false;
-  const ageMs = referenceDate.getTime() - checkedAt.getTime();
-  return ageMs > overdueAfterDays * 24 * 60 * 60 * 1000;
+function findEmergencyDistrictsWithoutActive(records, selectedDistrict = "") {
+  const districts = new Set(), active = new Set();
+  records.forEach(record => {
+    if (!record.stadtteil || (selectedDistrict && record.stadtteil !== selectedDistrict)) return;
+    districts.add(record.stadtteil);
+    if (record.status === NLB_STATUS.active) active.add(record.stadtteil);
+  });
+  return new Set([...districts].filter(district => !active.has(district)));
 }
 
-function filterEmergencyRecords(records, filters = {}) {
-  const searchTerm = normalizeSearchText(filters.search || "");
-  const wantedNotstrom = normalizeBooleanFilter(filters.notstrom);
-  const wantedBarrierefrei = normalizeBooleanFilter(filters.barrierefrei);
-
-  return records.filter((record) => {
-    if (filters.typ && record.typ !== filters.typ) return false;
-    if (filters.untertyp && record.untertyp !== filters.untertyp) return false;
-    if (filters.status && record.status !== normalizeEmergencyStatus(filters.status)) return false;
-    if (filters.stadtteil && record.stadtteil !== filters.stadtteil) return false;
-    if (filters.betreiber && record.betreiber !== filters.betreiber) return false;
-    if (filters.prioritaet && record.prioritaet !== filters.prioritaet) return false;
-    if (wantedBarrierefrei !== null && record.barrierefrei !== wantedBarrierefrei) return false;
-    if (wantedNotstrom !== null && record.stromversorgung_notstrom !== wantedNotstrom) return false;
-    if (searchTerm && !record._searchText.includes(searchTerm)) return false;
+function selectEmergencyRecords(records, selection, districts, referenceDate) {
+  return records.filter(record => {
+    if (Object.prototype.hasOwnProperty.call(NLB_STATUS, selection)) return record.status === NLB_STATUS[selection];
+    if (selection === "disrupted") return isEmergencyDisrupted(record.status);
+    if (selection === "capacity") return record.status === NLB_STATUS.active && record.kapazitaet_verfuegbar > 0;
+    if (selection === "old-check") return getEmergencyCheckAgeDays(record.letzte_pruefung, referenceDate) > NLB_DEFAULT_OVERDUE_AFTER_DAYS;
+    if (selection === "districts") return districts.has(record.stadtteil);
     return true;
   });
 }
 
-function normalizeBooleanFilter(value) {
-  if (!value) return null;
-  const normalized = normalizeSearchText(value);
-  if (["ja", "true", "1"].includes(normalized)) return true;
-  if (["nein", "false", "0"].includes(normalized)) return false;
-  return null;
+function calculateEmergencyScopeMetrics(records, districts, referenceDate = new Date()) {
+  const groups = new Map();
+  const metrics = {activeLocations:0, disruptedLocations:0, capacityByType:[],
+    olderChecks:0, unknownChecks:0, districtCount:districts.size};
+  records.forEach(record => {
+    if (record.status === NLB_STATUS.active) metrics.activeLocations++;
+    if (isEmergencyDisrupted(record.status)) metrics.disruptedLocations++;
+    const age = getEmergencyCheckAgeDays(record.letzte_pruefung,referenceDate);
+    if (age == null) metrics.unknownChecks++;
+    else if (age > NLB_DEFAULT_OVERDUE_AFTER_DAYS) metrics.olderChecks++;
+    if (!groups.has(record.typ)) {
+      const bucket = () => ({sum:0,knownCount:0,unknownCount:0});
+      groups.set(record.typ, {typ:record.typ,active:bucket(),restricted:bucket(),planned:bucket()});
+    }
+    const group = groups.get(record.typ);
+    for (const key of ["active","restricted","planned"]) {
+      if (record.status !== NLB_STATUS[key]) continue;
+      const bucket = group[key];
+      // Ohne Standorttyp ist auch die Vergleichbarkeit der Plätze unbekannt.
+      if (record.kapazitaet_verfuegbar == null || !record.typ) bucket.unknownCount++;
+      else { bucket.sum += record.kapazitaet_verfuegbar; bucket.knownCount++; }
+    }
+  });
+  metrics.capacityByType = [...groups.values()].sort((a,b) => String(a.typ || "").localeCompare(String(b.typ || ""),"de"));
+  metrics.capacityByType.forEach(group => {
+    for (const key of ["active","restricted","planned"]) {
+      if (!group[key].knownCount && group[key].unknownCount) group[key].sum = null;
+    }
+  });
+  return metrics;
+}
+
+function buildEmergencyView(records, filters = {}, selection = "", referenceDate = new Date()) {
+  const scopeRecords = filterEmergencyAreaRecords(records, filters);
+  const districts = findEmergencyDistrictsWithoutActive(records, filters.stadtteil);
+  const actionCounts = {};
+  for (const key of ["", ...Object.keys(NLB_STATUS), "disrupted","capacity","old-check","districts"]) {
+    actionCounts[key] = selectEmergencyRecords(scopeRecords,key,districts,referenceDate).length;
+  }
+  const filteredRecords = selectEmergencyRecords(scopeRecords,selection,districts,referenceDate);
+  return {scopeRecords, filteredRecords, districts, actionCounts,
+    metrics:calculateEmergencyScopeMetrics(scopeRecords,districts,referenceDate),
+    mappedCount:filteredRecords.filter(hasEmergencyCoordinates).length};
 }
 
 function isKnownNotfallDemoUrl(url) {
@@ -814,115 +789,110 @@ function renderEmergencyShell(config, uid) {
         <div class="alert alert-warning" role="note">
           <strong>Demo-Daten – keine realen Einsatzdaten</strong>
           <p class="mb-0">Die dargestellten Standorte und Kapazitäten sind Anschauungsbeispiele und keine Notfallentscheidungsgrundlage.</p>
-        </div>
-      ` : ""}
+        </div>` : ""}
       <div class="nlb-toolbar">
-        <div>
-          <p class="nlb-eyebrow mb-1">Kommunales Lagebild</p>
+        <div><p class="nlb-eyebrow mb-1">Kommunale Standortübersicht</p>
           <h2 class="mb-2">${escapeHtml(config.titel)}</h2>
           <p class="nlb-lead mb-0">${escapeHtml(config.description)}</p>
-          <p class="text-muted small mt-2 mb-0" id="nlb-data-status-${uid}">Datenstand wird geladen ...</p>
+          <p class="text-muted small mt-2 mb-0" id="nlb-data-status-${uid}">Daten werden geladen …</p>
         </div>
         <div class="nlb-toolbar-actions">
-          <button type="button" class="btn btn-outline-secondary" id="nlb-reset-filters-${uid}">Filter zurücksetzen</button>
+          <button class="btn btn-outline-secondary" type="button" data-nlb-action="reload">Daten neu laden</button>
+          <button class="btn btn-outline-secondary" type="button" id="nlb-reset-filters-${uid}">Filter zurücksetzen</button>
         </div>
       </div>
-
       <div class="alert alert-warning d-none" id="nlb-alert-${uid}" role="alert"></div>
-      <div class="nlb-loading" id="nlb-loading-${uid}" aria-live="polite"></div>
-
-      <div class="nlb-kpi-grid" id="nlb-kpis-${uid}">
-        ${renderKpiCard("active", "Aktive Standorte", "0", "Einsatzbereit", config.kpiKontext1, uid)}
-        ${renderKpiCard("disrupted", "Gestörte Standorte", "0", "Eingeschränkt oder außer Betrieb", config.kpiKontext2, uid)}
-        ${renderKpiCard("capacity", "Freie Gesamtkapazität", "0", "Verfügbare Plätze", config.kpiKontext3, uid)}
-        ${renderKpiCard("underserved", "Unterversorgte Stadtteile", "0", "Aktive Standorte unter Schwelle", config.kpiKontext4, uid)}
-        ${renderKpiCard("overdue", "Prüfungen überfällig", "0", "Älter als Grenzwert", config.kpiKontext5, uid)}
-      </div>
-
+      <div class="nlb-loading" id="nlb-loading-${uid}" role="status"></div>
+      <div id="nlb-quality-${uid}" role="status"></div>
       <section class="nlb-filters" aria-label="Filter">
         <div class="row g-3">
-          ${renderFilterSelect("typ", "Typ", uid)}
-          ${renderFilterSelect("untertyp", "Untertyp", uid)}
-          ${renderFilterSelect("status", "Status", uid)}
-          ${renderFilterSelect("stadtteil", "Stadtteil", uid)}
-          ${renderFilterSelect("betreiber", "Betreiber", uid)}
-          ${renderFilterSelect("barrierefrei", "Barrierefrei", uid)}
-          ${renderFilterSelect("notstrom", "Notstrom", uid)}
-          ${renderFilterSelect("prioritaet", "Priorität", uid)}
-          <div class="col-12 col-lg-4">
+          <div class="col-12 col-lg-3">
             <label class="form-label" for="nlb-filter-search-${uid}">Suche</label>
             <input class="form-control" id="nlb-filter-search-${uid}" type="search" placeholder="Name, Adresse, Hinweis">
           </div>
+          ${renderFilterSelect("typ","Typ",uid)}
+          ${renderFilterSelect("status","Status / Schnellauswahl",uid)}
+          ${renderFilterSelect("stadtteil","Stadtteil",uid)}
         </div>
-        <div class="nlb-filter-note" id="nlb-filter-note-${uid}"></div>
+        <div class="nlb-filter-actions">
+          <button class="btn btn-outline-secondary" type="button" data-nlb-action="extra-filters" data-bs-toggle="collapse"
+            data-bs-target="#nlb-extra-filters-${uid}" aria-expanded="false" aria-controls="nlb-extra-filters-${uid}">Weitere Filter</button>
+          <a class="btn btn-outline-secondary" href="#nlb-map-panel-${uid}" data-nlb-jump="map">Zur Karte</a>
+          <a class="btn btn-outline-secondary" href="#nlb-list-panel-${uid}" data-nlb-jump="list">Zur Standortliste</a>
+        </div>
+        <div class="collapse" id="nlb-extra-filters-${uid}"><div class="row g-3 mt-1">
+          ${renderFilterSelect("untertyp","Untertyp",uid)}
+          ${renderFilterSelect("betreiber","Betreiber",uid)}
+          ${renderFilterSelect("barrierefrei","Barrierefrei",uid)}
+          ${renderFilterSelect("notstrom","Notstrom",uid)}
+          ${renderFilterSelect("prioritaet","Priorität",uid)}
+        </div></div>
+        <div class="nlb-filter-note" id="nlb-filter-note-${uid}" role="status"></div>
       </section>
-
+      <p class="nlb-scope-note">Kennzahlen für den gewählten Datenbereich – ohne Status-/Schnellauswahl. Die Stadtteilzahl bezieht sich auf den Gesamtbestand bzw. den gewählten Stadtteil.</p>
+      <div class="nlb-kpi-grid" id="nlb-kpis-${uid}">
+        ${renderKpiCard("active","Aktive Standorte","—","Als aktiv gemeldet",config.kpiKontext1,uid)}
+        ${renderKpiCard("disrupted","Gestörte Standorte","—","Eingeschränkt, außer Betrieb oder Störung",config.kpiKontext2,uid)}
+        ${renderKpiCard("capacity","Gemeldete freie Plätze","—","Aktive Standorte · nach Typ",config.kpiKontext3,uid)}
+        ${renderKpiCard("districts","Stadtteile ohne aktiven Standort","—","im Datenbestand",config.kpiKontext4,uid)}
+        ${renderKpiCard("old-check","Letzte Prüfung vor mehr als 180 Tagen","—","Keine verbindliche Prüffrist",config.kpiKontext5,uid)}
+      </div>
       <div class="row g-4 align-items-stretch">
         <div class="col-12 col-xl-8">
-          <section class="nlb-panel h-100" aria-label="Karte">
-            <div class="nlb-panel-head">
-              <h3>Karte</h3>
-              <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-zoom-results-${uid}">Treffer zentrieren</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-toggle-radius-${uid}" title="Zeigt einen Radius von 1 km um jeden gefilterten Standort, keine geprüfte Versorgungsreichweite.">1 km Radius</button>
-              </div>
-            </div>
-            <div id="nlb-map-${uid}" class="nlb-map" role="application" aria-label="Standortkarte"></div>
+          <section class="nlb-panel h-100" id="nlb-map-panel-${uid}" tabindex="-1" aria-label="Karte">
+            <div class="nlb-panel-head"><h3>Karte</h3><div class="btn-group">
+              <button class="btn btn-sm btn-outline-secondary" type="button" id="nlb-zoom-results-${uid}">Treffer zentrieren</button>
+              <button class="btn btn-sm btn-outline-secondary" type="button" id="nlb-toggle-radius-${uid}" aria-pressed="false"
+                title="1 km um jeden gefilterten Standort, keine geprüfte Versorgungsreichweite.">1 km Radius</button>
+            </div></div>
+            <div id="nlb-map-${uid}" class="nlb-map" aria-label="Standortkarte"></div>
             <div class="nlb-map-legend" id="nlb-map-legend-${uid}"></div>
             <p class="text-muted small mt-2 mb-0">Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite.</p>
           </section>
         </div>
         <div class="col-12 col-xl-4">
           <section class="nlb-panel h-100" aria-label="Diagramm">
-            <div class="nlb-panel-head">
-              <h3>Standorte nach Typ</h3>
-            </div>
-            <div class="nlb-chart-wrap" id="nlb-chart-wrap-${uid}">
-              <canvas id="nlb-type-chart-${uid}"></canvas>
-            </div>
+            <div class="nlb-panel-head"><h3 id="nlb-chart-title-${uid}">Standorte nach Typ</h3></div>
+            <div class="nlb-chart-wrap" id="nlb-chart-wrap-${uid}"><canvas id="nlb-type-chart-${uid}" role="img" aria-label="Standorte nach Typ; Zahlen in der Standortliste"></canvas></div>
           </section>
         </div>
       </div>
-
-      <section class="nlb-panel mt-4" aria-label="Tabelle">
-        <div class="nlb-panel-head">
-          <h3>Operative Standortliste</h3>
-          <span class="nlb-result-count" id="nlb-result-count-${uid}">0 Treffer</span>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle nlb-table">
-            <thead id="nlb-table-head-${uid}"></thead>
-            <tbody id="nlb-table-body-${uid}"></tbody>
-          </table>
-        </div>
+      <section class="nlb-panel mt-4" id="nlb-list-panel-${uid}" tabindex="-1" aria-label="Standortliste">
+        <div class="nlb-panel-head"><h3>Standortliste</h3><span class="nlb-result-count" id="nlb-result-count-${uid}" role="status">Noch keine Daten</span></div>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Standorttabelle, horizontal scrollbar"><table class="table table-hover align-middle nlb-table">
+          <thead id="nlb-table-head-${uid}"></thead><tbody id="nlb-table-body-${uid}"></tbody>
+        </table></div>
         <div class="nlb-pagination">
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page-${uid}">Zurück</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-prev-page-${uid}" disabled>Zurück</button>
           <span id="nlb-page-info-${uid}">Seite 1 von 1</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-next-page-${uid}">Weiter</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="nlb-next-page-${uid}" disabled>Weiter</button>
         </div>
       </section>
-
-      ${renderMethodikbox(config, uid)}
-      ${renderWeitereInfos(config, uid)}
-    </section>
-  `;
+      <div class="offcanvas offcanvas-end nlb-details" tabindex="-1" id="nlb-details-${uid}" aria-labelledby="nlb-details-title-${uid}">
+        <div class="offcanvas-header"><h2 class="h5" id="nlb-details-title-${uid}">Standortdetails</h2>
+          <button type="button" class="btn-close" data-nlb-action="close-details" aria-label="Standortdetails schließen"></button>
+        </div>
+        <div class="offcanvas-body">
+          <button type="button" class="btn btn-outline-secondary mb-2" data-nlb-action="show-on-map">Auf Karte zeigen</button>
+          <div class="nlb-details-body" id="nlb-details-body-${uid}"></div>
+        </div>
+      </div>
+      ${renderMethodikbox(config,uid)}
+      ${renderWeitereInfos(config,uid)}
+    </section>`;
 }
 
 function renderKpiCard(id, label, value, hint, kontext, uid) {
-  const k = String(kontext || "").trim();
-  const kontextHtml = k
-    ? `<button class="nlb-kpi-info-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nlb-kpi-kontext-${id}-${uid}" aria-expanded="false" aria-controls="nlb-kpi-kontext-${id}-${uid}" aria-label="Erklärung zu diesem Wert"><span class="nlb-kpi-info-icon" aria-hidden="true">ⓘ</span></button><div id="nlb-kpi-kontext-${id}-${uid}" class="collapse"><div class="nlb-kpi-kontext">${escapeHtml(k)}</div></div>`
-    : "";
-  return `
-    <div class="nlb-kpi-wrap">
-      <button type="button" class="nlb-kpi" data-quickfilter="${id}">
-        <span>${label}</span>
-        <strong id="nlb-kpi-${id}-${uid}">${value}</strong>
-        <small>${hint}</small>
-      </button>
-      ${kontextHtml}
-    </div>
-  `;
+  const text = String(kontext || "").trim();
+  return `<div class="nlb-kpi-wrap"><article class="nlb-kpi">
+    <h3>${escapeHtml(label)}</h3><strong id="nlb-kpi-${id}-${uid}">${value}</strong>
+    <small>${escapeHtml(hint)}</small>
+    ${id === "capacity" ? `<div id="nlb-capacity-values-${uid}"></div>` : ""}
+    ${id === "old-check" ? `<p class="small" id="nlb-unknown-checks-${uid}"></p>` : ""}
+    ${id === "districts" ? `<p class="small" id="nlb-district-scope-${uid}">Gesamtbestand</p>` : ""}
+    <button type="button" class="btn btn-outline-secondary nlb-kpi-action" data-nlb-action="${id}" aria-pressed="false" disabled>Standorte anzeigen</button>
+    ${text ? `<details class="nlb-kpi-context"><summary>Erklärung: ${escapeHtml(label)}</summary><p>${escapeHtml(text)}</p></details>` : ""}
+  </article></div>`;
 }
 
 function renderFilterSelect(id, label, uid) {
@@ -936,77 +906,80 @@ function renderFilterSelect(id, label, uid) {
   `;
 }
 
+function getEmergencySelectionLabels() {
+  return {"":"Alle", active:"Aktive Standorte", disrupted:"Gestörte Standorte (alle Störungsarten)",
+    restricted:"Eingeschränkt", offline:"Außer Betrieb", planned:"Geplant",
+    unspecified:"Störung (Ausmaß unbekannt)", unknown:"Unbekannter Status",
+    capacity:"Aktive Standorte mit gemeldeten freien Plätzen",
+    "old-check":"Letzte Prüfung vor mehr als 180 Tagen",
+    districts:"Standorte in Stadtteilen ohne aktive Standortmeldung"};
+}
+
+function setEmergencySelection(state, selection, {toggle = false} = {}) {
+  if (!Object.prototype.hasOwnProperty.call(getEmergencySelectionLabels(),selection)) return;
+  state.selection = toggle && state.selection === selection ? "" : selection;
+  state.page = 1;
+  updateEmergencyDashboard(state);
+}
+
 function bindEmergencyShell(state) {
   state.host.querySelector(`#nlb-reset-filters-${state.uid}`).addEventListener("click", () => {
-    state.quickFilter = "";
-    state.page = 1;
-    state.host.querySelectorAll(".nlb-filter").forEach((element) => {
-      element.value = "";
-    });
+    state.selection = ""; state.page = 1;
+    state.host.querySelectorAll(".nlb-filter").forEach(element => {element.value = "";});
     state.host.querySelector(`#nlb-filter-search-${state.uid}`).value = "";
     updateEmergencyDashboard(state);
   });
-
   state.host.querySelector(`#nlb-zoom-results-${state.uid}`).addEventListener("click", () => fitEmergencyMap(state));
-  state.host.querySelector(`#nlb-toggle-radius-${state.uid}`).addEventListener("click", () => {
+  state.host.querySelector(`#nlb-toggle-radius-${state.uid}`).addEventListener("click", event => {
     state.showRadius = !state.showRadius;
-    state.host.querySelector(`#nlb-toggle-radius-${state.uid}`).classList.toggle("active", state.showRadius);
-    updateEmergencyMap(state);
+    event.currentTarget.classList.toggle("active",state.showRadius);
+    event.currentTarget.setAttribute("aria-pressed",String(state.showRadius));
+    updateEmergencyMap(state,{fit:false});
   });
-
   state.host.querySelector(`#nlb-prev-page-${state.uid}`).addEventListener("click", () => {
-    state.page = Math.max(1, state.page - 1);
-    renderEmergencyTable(state);
+    state.page = Math.max(1,state.page - 1); renderEmergencyTable(state);
   });
-
   state.host.querySelector(`#nlb-next-page-${state.uid}`).addEventListener("click", () => {
-    const maxPage = Math.max(1, Math.ceil(state.filteredRecords.length / state.pageSize));
-    state.page = Math.min(maxPage, state.page + 1);
+    state.page = Math.min(Math.max(1,Math.ceil(state.filteredRecords.length/state.pageSize)),state.page+1);
     renderEmergencyTable(state);
   });
-
-  state.host.querySelectorAll("[data-quickfilter]").forEach((element) => {
-    element.addEventListener("click", () => {
-      state.quickFilter = element.dataset.quickfilter || "";
-      state.page = 1;
-      updateEmergencyDashboard(state);
-    });
-  });
-
-  state.host.querySelectorAll(".nlb-filter").forEach((element) => {
+  state.host.addEventListener("click", event => {
+    if (state.disposed) return;
+    const button = event.target.closest("[data-nlb-action]");
+    if (button && state.host.contains(button)) {
+      const action = button.dataset.nlbAction;
+      if (action === "reload") refreshEmergencyDashboard(state);
+      else if (action === "details") openEmergencyDetails(state,button.dataset.recordKey,button);
+      else if (action === "close-details") closeEmergencyDetails(state);
+      else if (action === "show-on-map") focusEmergencyRecord(state,state.selectedRecordKey);
+      else if (action === "clear-selection") setEmergencySelection(state,"");
+      else if (Object.prototype.hasOwnProperty.call(getEmergencySelectionLabels(),action)) setEmergencySelection(state,action,{toggle:true});
+    }
+    const jump = event.target.closest("[data-nlb-jump]");
+    if (jump && state.host.contains(jump)) {
+      event.preventDefault();
+      const target = state.host.querySelector(`#nlb-${jump.dataset.nlbJump}-panel-${state.uid}`);
+      if (target) {target.scrollIntoView({block:"start"});target.focus({preventScroll:true});}
+    }
+  }, {signal:state.events.signal});
+  state.host.querySelectorAll(".nlb-filter").forEach(element => {
     element.addEventListener("change", () => {
-      state.quickFilter = "";
-      state.page = 1;
-      updateEmergencyDashboard(state);
+      if (element.dataset.filter === "status") setEmergencySelection(state,element.value);
+      else {state.page = 1;updateEmergencyDashboard(state);}
     });
   });
-
   state.host.querySelector(`#nlb-filter-search-${state.uid}`).addEventListener("input", () => {
-    state.quickFilter = "";
-    state.page = 1;
-    updateEmergencyDashboard(state);
+    state.page = 1; updateEmergencyDashboard(state);
   });
 }
 
 function populateEmergencyFilters(state) {
-  setSelectOptions(state, "typ", uniqueValues(state.allRecords, "typ"));
-  setSelectOptions(state, "untertyp", uniqueValues(state.allRecords, "untertyp"));
-  setSelectOptions(
-    state,
-    "status",
-    Object.values(NLB_STATUS).map((status) => ({ value: status, label: NLB_STATUS_LABELS[status] }))
-  );
-  setSelectOptions(state, "stadtteil", uniqueValues(state.allRecords, "stadtteil"));
-  setSelectOptions(state, "betreiber", uniqueValues(state.allRecords, "betreiber"));
-  setSelectOptions(state, "barrierefrei", [
-    { value: "ja", label: "Ja" },
-    { value: "nein", label: "Nein" },
-  ]);
-  setSelectOptions(state, "notstrom", [
-    { value: "ja", label: "Ja" },
-    { value: "nein", label: "Nein" },
-  ]);
-  setSelectOptions(state, "prioritaet", ["hoch", "mittel", "niedrig"]);
+  for (const key of ["typ","untertyp","stadtteil","betreiber"]) setSelectOptions(state,key,uniqueValues(state.allRecords,key));
+  const labels = getEmergencySelectionLabels();
+  setSelectOptions(state,"status", ["active","disrupted","restricted","offline","planned","unspecified","unknown"].map(value => ({value,label:labels[value]})));
+  for (const key of ["barrierefrei","notstrom"]) setSelectOptions(state,key,[
+    {value:"ja",label:"Ja"}, {value:"nein",label:"Nein"}, {value:"__unknown__",label:"Unbekannt"}]);
+  setSelectOptions(state,"prioritaet",[{value:"hoch",label:"Hoch"},{value:"mittel",label:"Mittel"},{value:"niedrig",label:"Niedrig"},{value:"__unknown__",label:"Unbekannt"}]);
 }
 
 function setSelectOptions(state, id, values) {
@@ -1032,12 +1005,15 @@ function uniqueValues(records, key) {
 }
 
 function updateEmergencyDashboard(state) {
+  if (!state.hasSuccessfulLoad || state.disposed) return;
   const filters = collectEmergencyFilters(state);
-  let filteredRecords = filterEmergencyRecords(state.allRecords, filters);
-  filteredRecords = applyQuickFilter(filteredRecords, state);
-  state.filteredRecords = sortEmergencyRecords(filteredRecords, state.sortKey, state.sortDirection);
-
+  state.view = buildEmergencyView(state.allRecords,filters,state.selection,new Date());
+  state.filteredRecords = sortEmergencyRecords(state.view.filteredRecords,state.sortKey,state.sortDirection);
+  state.host.querySelector(`#nlb-filter-status-${state.uid}`).value =
+    ["active","disrupted","restricted","offline","planned","unspecified","unknown"].includes(state.selection) ? state.selection : "";
+  if (state.selectedRecordKey && !state.filteredRecords.some(record => record._key===state.selectedRecordKey)) closeEmergencyDetails(state);
   updateEmergencyStatusLine(state);
+  renderEmergencyQuality(state);
   renderEmergencyKpis(state);
   renderEmergencyLegend(state);
   updateEmergencyMap(state);
@@ -1047,95 +1023,61 @@ function updateEmergencyDashboard(state) {
 
 function collectEmergencyFilters(state) {
   const filters = {};
-  state.host.querySelectorAll(".nlb-filter").forEach((element) => {
-    filters[element.dataset.filter] = element.value;
+  state.host.querySelectorAll(".nlb-filter").forEach(element => {
+    if (element.dataset.filter !== "status") filters[element.dataset.filter] = element.value;
   });
   filters.search = state.host.querySelector(`#nlb-filter-search-${state.uid}`).value;
   return filters;
 }
 
-function applyQuickFilter(records, state) {
-  const now = new Date();
-  if (state.quickFilter === "active") {
-    return records.filter((record) => record.status === NLB_STATUS.active);
-  }
-  if (state.quickFilter === "disrupted") {
-    return records.filter((record) => [NLB_STATUS.restricted, NLB_STATUS.offline].includes(record.status));
-  }
-  if (state.quickFilter === "capacity") {
-    return records.filter((record) => record.kapazitaet_verfuegbar > 0);
-  }
-  if (state.quickFilter === "overdue") {
-    return records.filter((record) =>
-      isEmergencyCheckOverdue(record, NLB_DEFAULT_OVERDUE_AFTER_DAYS, now)
-    );
-  }
-  if (state.quickFilter === "underserved") {
-    const underserved = findUnderservedDistricts(records, NLB_DEFAULT_MIN_ACTIVE_PER_DISTRICT);
-    return records.filter((record) => underserved.has(record.stadtteil));
-  }
-  return records;
-}
-
-function findUnderservedDistricts(records, minActivePerDistrict) {
-  const districts = new Set(records.map((record) => record.stadtteil));
-  const activeByDistrict = {};
-  records.forEach((record) => {
-    if (record.status === NLB_STATUS.active) {
-      activeByDistrict[record.stadtteil] = (activeByDistrict[record.stadtteil] || 0) + 1;
-    }
-  });
-  return new Set(
-    [...districts].filter((district) => (activeByDistrict[district] || 0) < minActivePerDistrict)
-  );
-}
-
 function updateEmergencyStatusLine(state) {
-  const statusElement = state.host.querySelector(`#nlb-data-status-${state.uid}`);
-  const maxDate = state.allRecords
-    .map((record) => record.letzte_pruefung)
-    .filter(Boolean)
-    .sort()
-    .pop();
-  const apiurl = safeHttpUrl(state.config.apiurl);
-  const apiurlHtml = apiurl
-    ? `<a href="${escapeHtml(apiurl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(apiurl)}</a>`
-    : state.config.apiurl ? escapeHtml(state.config.apiurl) : "-";
-  const dateStr = maxDate ? formatDate(maxDate) : "nicht angegeben";
-  statusElement.innerHTML = `Datenquelle: ${apiurlHtml} | ${state.allRecords.length.toLocaleString("de-DE")} Standorte | Datenstand: ${escapeHtml(dateStr)}`;
-
+  const date = state.allRecords.map(record => record.letzte_pruefung).filter(Boolean).sort().pop();
+  const url = safeHttpUrl(state.config.apiurl);
+  const source = url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Datenressource ansehen</a>` : "Keine Quelle";
+  state.host.querySelector(`#nlb-data-status-${state.uid}`).innerHTML =
+    `${source} · ${state.allRecords.length} Standorte · Jüngste Standortprüfung: ${escapeHtml(date ? formatDate(date) : "unbekannt")}` +
+    (state.lastSuccessfulFetch ? ` · Letzter erfolgreicher Abruf: ${escapeHtml(state.lastSuccessfulFetch.toLocaleString("de-DE"))}` : "");
+  const filters = collectEmergencyFilters(state);
+  const extra = ["untertyp","betreiber","barrierefrei","notstrom","prioritaet"].filter(key => filters[key]);
   const note = state.host.querySelector(`#nlb-filter-note-${state.uid}`);
-  note.textContent = state.quickFilter
-    ? `Schnellfilter aktiv: ${quickFilterLabel(state.quickFilter)}`
-    : "Alle Filter wirken gleichzeitig auf Kennzahlen, Karte, Diagramm und Tabelle.";
-}
-
-function quickFilterLabel(value) {
-  const labels = {
-    active: "aktive Standorte",
-    disrupted: "gestörte Standorte",
-    capacity: "Standorte mit freier Kapazität",
-    underserved: "unterversorgte Stadtteile",
-    overdue: "überfällige Prüfungen",
-  };
-  return labels[value] || value;
+  note.innerHTML = (state.selection ?
+    `<span>Schnellauswahl: ${escapeHtml(getEmergencySelectionLabels()[state.selection])}</span> <button class="btn btn-sm btn-outline-secondary" type="button" data-nlb-action="clear-selection">Schnellauswahl entfernen</button>` :
+    "Keine Status-/Schnellauswahl aktiv.") +
+    (extra.length ? `<p class="mb-0">Weitere Filter aktiv: ${extra.map(key => {
+      const el = state.host.querySelector(`#nlb-filter-${key}-${state.uid}`);
+      const label = state.host.querySelector(`label[for="nlb-filter-${key}-${state.uid}"]`).textContent;
+      return escapeHtml(label + ": " + el.selectedOptions[0].textContent);
+    }).join(" · ")}</p>` : "");
 }
 
 function renderEmergencyKpis(state) {
-  const metrics = calculateEmergencyMetrics(state.filteredRecords, {
-    minActivePerDistrict: NLB_DEFAULT_MIN_ACTIVE_PER_DISTRICT,
-    overdueAfterDays: NLB_DEFAULT_OVERDUE_AFTER_DAYS,
-    referenceDate: new Date(),
-  });
-
-  setText(state, `nlb-kpi-active-${state.uid}`, metrics.activeLocations.toLocaleString("de-DE"));
-  setText(state, `nlb-kpi-disrupted-${state.uid}`, metrics.disruptedLocations.toLocaleString("de-DE"));
-  setText(state, `nlb-kpi-capacity-${state.uid}`, metrics.freeCapacity.toLocaleString("de-DE"));
-  setText(state, `nlb-kpi-underserved-${state.uid}`, metrics.underservedDistricts.toLocaleString("de-DE"));
-  setText(state, `nlb-kpi-overdue-${state.uid}`, metrics.overdueChecks.toLocaleString("de-DE"));
-
-  state.host.querySelectorAll(".nlb-kpi").forEach((element) => {
-    element.classList.toggle("active", element.dataset.quickfilter === state.quickFilter);
+  const {metrics,actionCounts} = state.view;
+  const values = {active:metrics.activeLocations, disrupted:metrics.disruptedLocations,
+    districts:metrics.districtCount, "old-check":metrics.olderChecks};
+  for (const [key,value] of Object.entries(values)) setText(state,`nlb-kpi-${key}-${state.uid}`,formatNumber(value));
+  const groups = metrics.capacityByType;
+  const activeBucket = groups.length === 1 ? groups[0].active : null;
+  setText(state,`nlb-kpi-capacity-${state.uid}`,activeBucket ?
+    (!activeBucket.knownCount && !activeBucket.unknownCount ? "Keine aktiven Standorte" : formatNumber(activeBucket.sum)) :
+    groups.length ? `${groups.length} Typen` : "Keine Standorte");
+  const bucketText = bucket => {
+    if (!bucket.knownCount && !bucket.unknownCount) return "keine Standorte";
+    return `${formatNumber(bucket.sum)} gemeldete Plätze${bucket.unknownCount ? ` · ${bucket.unknownCount} nicht auswertbare Angaben` : ""}`;
+  };
+  state.host.querySelector(`#nlb-capacity-values-${state.uid}`).innerHTML = groups.length ?
+    `<details class="nlb-capacity-details"><summary>Nach Typ und Status</summary>${groups.map(group =>
+      `<div class="nlb-capacity-group"><b>${escapeHtml(group.typ || "Typ nicht angegeben")}</b>
+       <div>Aktiv: ${bucketText(group.active)}</div><div>Eingeschränkt: ${bucketText(group.restricted)}</div>
+       <div>Geplant: ${bucketText(group.planned)}</div></div>`).join("")}</details>` : "";
+  setText(state,`nlb-unknown-checks-${state.uid}`,`${metrics.unknownChecks} Prüfdaten unbekannt/ungültig`);
+  const district = collectEmergencyFilters(state).stadtteil;
+  setText(state,`nlb-district-scope-${state.uid}`,district ? `Bestand: ${district}` : "Gesamtbestand");
+  state.host.querySelectorAll(".nlb-kpi-action").forEach(button => {
+    const key = button.dataset.nlbAction, active = state.selection === key;
+    button.textContent = active ? "Schnellauswahl aufheben" : `${actionCounts[key]} Standorte anzeigen`;
+    button.disabled = !active && actionCounts[key] === 0;
+    button.setAttribute("aria-pressed",String(active));
+    button.closest(".nlb-kpi").classList.toggle("active",active);
   });
 }
 
@@ -1175,62 +1117,57 @@ function renderEmergencyLegend(state) {
       .join("") + typeLegend;
 }
 
-function updateEmergencyMap(state) {
+function updateEmergencyMap(state, {fit = true} = {}) {
   const mapElement = state.host.querySelector(`#nlb-map-${state.uid}`);
-  if (!state.libraryState.leaflet || typeof L === "undefined") {
-    renderFallbackEmergencyMap(state, mapElement);
+  const mapped = state.filteredRecords.filter(hasEmergencyCoordinates);
+  const available = state.libraryState.leaflet && typeof L !== "undefined" && mapped.length > 0;
+  for (const prefix of ["nlb-zoom-results-","nlb-toggle-radius-"]) {
+    const control = state.host.querySelector("#" + prefix + state.uid);
+    if (control) control.disabled = !available;
+  }
+  if (!available) {
+    if (state.map) state.map.remove();
+    state.map = null; state.markerLayer = null; state.radiusLayer = null;
+    state.markersByKey.clear();
+    renderFallbackEmergencyMap(state,mapElement);
     return;
   }
-
   if (!state.map) {
+    mapElement.innerHTML = "";
     mapElement.classList.remove("nlb-map-fallback-mode");
-    state.map = L.map(mapElement).setView(
-      [state.mapCenter.lat, state.mapCenter.lon],
-      state.mapZoom
-    );
+    const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    state.map = L.map(mapElement,{zoomAnimation:!reduced,markerZoomAnimation:!reduced}).setView(
+      [state.mapCenter.lat,state.mapCenter.lon],state.mapZoom);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap-Mitwirkende",
+      maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-Mitwirkende</a>',
     }).addTo(state.map);
   }
-
   if (state.markerLayer) state.markerLayer.remove();
   if (state.radiusLayer) state.radiusLayer.remove();
-
-  state.markerLayer =
-    state.libraryState.markerCluster && L.markerClusterGroup
-      ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45 })
-      : L.layerGroup();
+  state.markersByKey.clear();
+  state.markerLayer = state.libraryState.markerCluster && L.markerClusterGroup ?
+    L.markerClusterGroup({
+      showCoverageOnHover:false, maxClusterRadius:45, animate:false,
+      iconCreateFunction: cluster => L.divIcon({className:"nlb-cluster-marker",iconSize:[40,40],
+        html:`<span>${cluster.getChildCount()}<span class="visually-hidden"> zusammengefasste Standorte</span></span>`}),
+    }) : L.layerGroup();
   state.radiusLayer = L.layerGroup();
-
-  state.filteredRecords.forEach((record) => {
-    if (!Number.isFinite(record.lat) || !Number.isFinite(record.lon)) return;
-    const marker = L.marker([record.lat, record.lon], {
-      icon: L.divIcon({
-        className: "",
-        html: `<span class="nlb-map-marker ${statusClass(record.status)}">${typeInitial(record.typ)}</span>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-      }),
-      title: record.name,
+  mapped.forEach(record => {
+    const marker = L.marker([record.lat,record.lon],{
+      icon:L.divIcon({className:"",html:`<span class="nlb-map-marker ${statusClass(record.status)}">${typeInitial(record.typ)}</span>`,iconSize:[30,30],iconAnchor:[15,15]}),
+      title:record.name,
     });
     marker.bindPopup(renderEmergencyPopup(record));
+    marker.on("click",() => openEmergencyDetails(state,record._key,marker.getElement()));
+    state.markersByKey.set(record._key,marker);
     state.markerLayer.addLayer(marker);
-
-    if (state.showRadius) {
-      L.circle([record.lat, record.lon], {
-        radius: 1000,
-        color: NLB_STATUS_COLORS[record.status] || "#6c757d",
-        fillColor: NLB_STATUS_COLORS[record.status] || "#6c757d",
-        fillOpacity: 0.05,
-        weight: 1,
-      }).addTo(state.radiusLayer);
-    }
+    if (state.showRadius) L.circle([record.lat,record.lon],{
+      radius:1000,color:NLB_STATUS_COLORS[record.status],fillOpacity:0.05,weight:1,
+    }).addTo(state.radiusLayer);
   });
-
   state.markerLayer.addTo(state.map);
   if (state.showRadius) state.radiusLayer.addTo(state.map);
-  fitEmergencyMap(state);
+  if (fit) fitEmergencyMap(state);
 }
 
 function renderEmergencyPopup(record) {
@@ -1240,7 +1177,7 @@ function renderEmergencyPopup(record) {
       <dl>
         <dt>Typ</dt><dd>${escapeHtml(record.typ)}</dd>
         <dt>Status</dt><dd>${escapeHtml(NLB_STATUS_LABELS[record.status] || record.status)}</dd>
-        <dt>Kapazität</dt><dd>${record.kapazitaet_verfuegbar} / ${record.kapazitaet_max}</dd>
+        <dt>Gemeldete Plätze (frei / max.)</dt><dd>${formatNumber(record.kapazitaet_verfuegbar)} / ${formatNumber(record.kapazitaet_max)}</dd>
         <dt>Betreiber</dt><dd>${escapeHtml(record.betreiber || "-")}</dd>
         <dt>Letzte Prüfung</dt><dd>${escapeHtml(formatDate(record.letzte_pruefung))}</dd>
       </dl>
@@ -1264,8 +1201,11 @@ function fitEmergencyMap(state) {
 }
 
 function updateEmergencyChart(state) {
+  const count = new Set(state.filteredRecords.map(record => record.typ)).size;
+  setText(state,`nlb-chart-title-${state.uid}`,count > 10 ? `10 häufigste Standorttypen – ${count - 10} weitere Typen` : "Standorte nach Typ");
   const chartWrap = state.host.querySelector(`#nlb-chart-wrap-${state.uid}`);
   if (!state.libraryState.chart || typeof Chart === "undefined") {
+    if (state.chart) {state.chart.destroy();state.chart=null;}
     renderFallbackEmergencyChart(state, chartWrap);
     return;
   }
@@ -1292,12 +1232,13 @@ function updateEmergencyChart(state) {
         {
           label: "Standorte",
           data: values,
-          backgroundColor: ["#2563eb", "#198754", "#f0ad00", "#c1121f", "#6f42c1", "#0f766e"],
+          backgroundColor: "#486581",
           borderRadius: 4,
         },
       ],
     },
     options: {
+      animation: !(typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches),
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
@@ -1313,52 +1254,10 @@ function updateEmergencyChart(state) {
 
 function renderFallbackEmergencyMap(state, mapElement) {
   mapElement.classList.add("nlb-map-fallback-mode");
-  const records = state.filteredRecords.filter(
-    (record) => Number.isFinite(record.lat) && Number.isFinite(record.lon)
-  );
-
-  if (!records.length) {
-    mapElement.innerHTML = `<div class="nlb-map-fallback">Keine kartierbaren Standorte fuer die aktuellen Filter.</div>`;
-    return;
-  }
-
-  const lats = records.map((record) => record.lat);
-  const lons = records.map((record) => record.lon);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLon = Math.min(...lons);
-  const maxLon = Math.max(...lons);
-  const latRange = maxLat - minLat || 0.01;
-  const lonRange = maxLon - minLon || 0.01;
-  const visibleRecords = records.slice(0, 650);
-
-  const points = visibleRecords
-    .map((record) => {
-      const x = 40 + ((record.lon - minLon) / lonRange) * 920;
-      const y = 460 - ((record.lat - minLat) / latRange) * 420;
-      const radius = record.status === NLB_STATUS.active ? 4.5 : 6;
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" fill="${
-        NLB_STATUS_COLORS[record.status] || "#6c757d"
-      }"><title>${escapeHtml(record.name)}</title></circle>`;
-    })
-    .join("");
-
-  mapElement.innerHTML = `
-    <svg class="nlb-svg-map" viewBox="0 0 1000 520" role="img" aria-label="Schematische Standortkarte">
-      <rect x="1" y="1" width="998" height="518" rx="18" fill="#eef6ff" stroke="#c7d7ea"/>
-      <path d="M90 390 C210 300 310 340 430 255 S700 155 910 115" fill="none" stroke="#cbd5e1" stroke-width="36" stroke-linecap="round"/>
-      <path d="M110 190 C245 245 360 170 505 230 S745 310 890 255" fill="none" stroke="#d9e2ec" stroke-width="28" stroke-linecap="round"/>
-      <g opacity="0.18" stroke="#64748b">
-        <path d="M130 70v380M300 45v430M470 55v405M640 45v420M810 70v360"/>
-        <path d="M90 115h820M70 225h850M95 335h790M130 445h740"/>
-      </g>
-      <g>${points}</g>
-      <text x="36" y="40" fill="#334155" font-size="22" font-weight="700">Lokale Karten-Vorschau</text>
-      <text x="36" y="68" fill="#64748b" font-size="16">${records.length.toLocaleString(
-        "de-DE"
-      )} Standorte, Leaflet wird bei verfuegbarer Bibliothek automatisch genutzt</text>
-    </svg>
-  `;
+  const unavailable = !state.libraryState.leaflet || typeof L === "undefined";
+  mapElement.innerHTML = `<div class="nlb-map-fallback" role="status">${unavailable ?
+    "Die Karte ist derzeit nicht verfügbar. Alle auswertbaren Standorte bleiben in der Liste und den Details zugänglich." :
+    "Keine kartierbaren Standorte für die aktuelle Auswahl. Die Standortliste bleibt nutzbar."}</div>`;
 }
 
 function renderFallbackEmergencyChart(state, chartWrap) {
@@ -1390,111 +1289,160 @@ function renderFallbackEmergencyChart(state, chartWrap) {
 }
 
 function aggregateByKey(records, key) {
-  return records.reduce((result, record) => {
-    const value = record[key] || "Nicht zugeordnet";
-    result[value] = (result[value] || 0) + 1;
-    return result;
-  }, {});
+  const result = new Map();
+  records.forEach(record => {
+    const value = record[key] || "Nicht angegeben";
+    result.set(value,(result.get(value) || 0) + 1);
+  });
+  return Object.fromEntries(result);
 }
 
 function renderEmergencyTable(state) {
-  const columns = [
-    ["name", "Name"],
-    ["typ", "Typ"],
-    ["stadtteil", "Stadtteil"],
-    ["status", "Status"],
-    ["kapazitaet_max", "Max."],
-    ["kapazitaet_verfuegbar", "Frei"],
-    ["barrierefrei", "Barrierefrei"],
-    ["stromversorgung_notstrom", "Notstrom"],
-    ["letzte_pruefung", "Letzte Prüfung"],
-    ["betreiber", "Betreiber"],
-  ];
-  const maxPage = Math.max(1, Math.ceil(state.filteredRecords.length / state.pageSize));
-  state.page = Math.min(state.page, maxPage);
-  const start = (state.page - 1) * state.pageSize;
-  const pageRows = state.filteredRecords.slice(start, start + state.pageSize);
-
-  state.host.querySelector(`#nlb-table-head-${state.uid}`).innerHTML = `<tr>${columns
-    .map(([key, label]) => {
-      const active = state.sortKey === key ? ` aria-sort="${state.sortDirection === "asc" ? "ascending" : "descending"}"` : "";
-      return `<th scope="col"${active}><button type="button" class="nlb-sort" data-sort="${key}">${label}</button></th>`;
-    })
-    .join("")}</tr>`;
-
-  state.host.querySelector(`#nlb-table-body-${state.uid}`).innerHTML =
-    pageRows
-      .map(
-        (record) => `
-        <tr data-record-id="${escapeHtml(record.id)}">
-          <td><strong>${escapeHtml(record.name)}</strong><span>${escapeHtml(record.hinweis || "")}</span></td>
-          <td>${escapeHtml(record.typ)}</td>
-          <td>${escapeHtml(record.stadtteil)}</td>
-          <td><span class="badge ${statusBadgeClass(record.status)}">${escapeHtml(
-            NLB_STATUS_LABELS[record.status] || record.status
-          )}</span></td>
-          <td>${formatNumber(record.kapazitaet_max)}</td>
-          <td>${formatNumber(record.kapazitaet_verfuegbar)}</td>
-          <td>${formatBoolean(record.barrierefrei)}</td>
-          <td>${formatBoolean(record.stromversorgung_notstrom)}</td>
-          <td>${escapeHtml(formatDate(record.letzte_pruefung))}</td>
-          <td>${escapeHtml(record.betreiber)}</td>
-        </tr>
-      `
-      )
-      .join("") || `<tr><td colspan="10" class="text-center text-muted py-4">Keine Treffer fuer die aktuellen Filter.</td></tr>`;
-
-  state.host.querySelectorAll(".nlb-sort").forEach((button) => {
-    button.addEventListener("click", () => {
-      const key = button.dataset.sort;
-      if (state.sortKey === key) {
-        state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
-      } else {
-        state.sortKey = key;
-        state.sortDirection = "asc";
-      }
-      state.page = 1;
-      updateEmergencyDashboard(state);
-    });
-  });
-
-  state.host.querySelectorAll(`#nlb-table-body-${state.uid} tr[data-record-id]`).forEach((row) => {
-    row.addEventListener("click", () => focusEmergencyRecord(state, row.dataset.recordId));
-  });
-
-  state.host.querySelector(`#nlb-result-count-${state.uid}`).textContent = `${state.filteredRecords.length.toLocaleString(
-    "de-DE"
-  )} Treffer`;
-  state.host.querySelector(`#nlb-page-info-${state.uid}`).textContent = `Seite ${state.page} von ${maxPage}`;
-  state.host.querySelector(`#nlb-prev-page-${state.uid}`).disabled = state.page <= 1;
-  state.host.querySelector(`#nlb-next-page-${state.uid}`).disabled = state.page >= maxPage;
+  const columns = [["name","Name / Details"],["typ","Typ"],["stadtteil","Stadtteil"],["status","Status"],
+    ["kapazitaet_max","Max."],["kapazitaet_verfuegbar","Frei"],["barrierefrei","Barrierefrei"],
+    ["stromversorgung_notstrom","Notstrom"],["letzte_pruefung","Letzte Prüfung"],["betreiber","Betreiber"]];
+  const maxPage = Math.max(1,Math.ceil(state.filteredRecords.length/state.pageSize));
+  state.page = Math.min(state.page,maxPage);
+  const rows = state.filteredRecords.slice((state.page-1)*state.pageSize,state.page*state.pageSize);
+  state.host.querySelector(`#nlb-table-head-${state.uid}`).innerHTML = `<tr>${columns.map(([key,label]) =>
+    `<th scope="col"${state.sortKey===key ? ` aria-sort="${state.sortDirection==="asc" ? "ascending" : "descending"}"` : ""}>
+      <button type="button" class="nlb-sort" data-sort="${key}">${label}</button></th>`).join("")}</tr>`;
+  state.host.querySelector(`#nlb-table-body-${state.uid}`).innerHTML = rows.map(record => `
+    <tr data-record-key="${record._key}">
+      <td><button class="nlb-details-link" type="button" data-nlb-action="details" data-record-key="${record._key}"
+        aria-label="Details zu ${escapeHtml(record.name)}">${escapeHtml(record.name)}</button><span>${escapeHtml(record.hinweis)}</span></td>
+      <td>${escapeHtml(record.typ || "Nicht angegeben")}</td><td>${escapeHtml(record.stadtteil || "Nicht zugeordnet")}</td>
+      <td><span class="badge ${statusBadgeClass(record.status)}">${escapeHtml(NLB_STATUS_LABELS[record.status])}</span></td>
+      <td>${formatNumber(record.kapazitaet_max)}</td><td>${formatNumber(record.kapazitaet_verfuegbar)}</td>
+      <td>${formatBoolean(record.barrierefrei)}</td><td>${formatBoolean(record.stromversorgung_notstrom)}</td>
+      <td>${escapeHtml(formatDate(record.letzte_pruefung))}</td><td>${escapeHtml(record.betreiber || "Nicht angegeben")}</td>
+    </tr>`).join("") || '<tr><td colspan="10" class="text-center text-muted py-4">Keine Treffer für die aktuelle Filterauswahl.</td></tr>';
+  state.host.querySelectorAll(".nlb-sort").forEach(button => button.addEventListener("click", () => {
+    const key = button.dataset.sort;
+    state.sortDirection = state.sortKey===key && state.sortDirection==="asc" ? "desc" : "asc";
+    state.sortKey = key; state.page = 1;
+    state.filteredRecords = sortEmergencyRecords(state.view.filteredRecords,key,state.sortDirection);
+    renderEmergencyTable(state);
+    state.host.querySelector(`[data-sort="${key}"]`).focus({preventScroll:true});
+  }));
+  setText(state,`nlb-result-count-${state.uid}`,`${state.filteredRecords.length} Treffer · ${state.filteredRecords.filter(hasEmergencyCoordinates).length} auf der Karte`);
+  setText(state,`nlb-page-info-${state.uid}`,`Seite ${state.page} von ${maxPage}`);
+  state.host.querySelector(`#nlb-prev-page-${state.uid}`).disabled = state.page<=1;
+  state.host.querySelector(`#nlb-next-page-${state.uid}`).disabled = state.page>=maxPage;
 }
 
 function sortEmergencyRecords(records, key, direction) {
-  const sorted = [...records].sort((a, b) => {
-    const left = a[key];
-    const right = b[key];
-    if (typeof left === "number" && typeof right === "number") {
-      return left - right;
-    }
-    return String(left || "").localeCompare(String(right || ""), "de", { numeric: true });
+  return [...records].sort((a, b) => {
+    const left = a[key], right = b[key];
+    if (left == null && right == null) return 0;
+    if (left == null) return 1;
+    if (right == null) return -1;
+    const comparison = typeof left === "number" && typeof right === "number" ? left - right :
+      String(left).localeCompare(String(right), "de", {numeric:true});
+    return direction === "desc" ? -comparison : comparison;
   });
-  return direction === "desc" ? sorted.reverse() : sorted;
 }
 
-function focusEmergencyRecord(state, recordId) {
-  const record = state.filteredRecords.find((entry) => entry.id === recordId);
-  if (!record || !state.map || !Number.isFinite(record.lat) || !Number.isFinite(record.lon)) return;
-  state.map.setView([record.lat, record.lon], 16);
+function renderEmergencyDetails(record, uid) {
+  const absent = value => value == null || value === "" ? "Nicht angegeben" : value;
+  const detailValue = (key, format = value => value) => {
+    const issue = record._issues.find(item => item.field === key);
+    if (issue && issue.reason === "missing") return "Nicht angegeben";
+    if (issue && issue.reason === "invalid") return "Unbekannt";
+    return format(record[key]);
+  };
+  const rows = [
+    ["Quellkennung",record._sourceId],["Typ",detailValue("typ")],["Untertyp",record.untertyp],
+    ["Adresse",[record.strasse,[record.plz,record.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")],
+    ["Stadtteil",detailValue("stadtteil")],["Status",detailValue("status",value => NLB_STATUS_LABELS[value])],
+    ["Statusangabe der Quelle",record._rawStatus],
+    ["Gemeldete maximale Plätze",detailValue("kapazitaet_max",formatNumber)],
+    ["Gemeldete freie Plätze",detailValue("kapazitaet_verfuegbar",formatNumber)],
+    ["Barrierefrei",detailValue("barrierefrei",formatBoolean)],["Notstrom",detailValue("stromversorgung_notstrom",formatBoolean)],
+    ["Wasser",detailValue("wasser_verfuegbar",formatBoolean)],["Sanitär",detailValue("sanitaer_verfuegbar",formatBoolean)],
+    ["Betreiber",record.betreiber],["Veröffentlichte Ansprechstelle",record.ansprechpartner],
+    ["Letzte Prüfung",detailValue("letzte_pruefung",formatDate)],["Priorität",detailValue("prioritaet")],
+    ["Hinweis",record.hinweis],
+  ];
+  return `<dl class="nlb-detail-fields">${rows.map(([label,value]) =>
+    `<dt>${label}</dt><dd>${escapeHtml(absent(value))}</dd>`).join("")}</dl>` +
+    (record._issues.length ? '<p class="alert alert-warning">Dieser Standort enthält fehlende, ungültige oder nicht eindeutige Angaben. Unbekannt bedeutet nicht Nein oder Null.</p>' : "");
+}
+
+function ensureEmergencyDetailPanel(state) {
+  if (state.detailPanel) return;
+  const element = state.host.querySelector(`#nlb-details-${state.uid}`);
+  state.detailElement = element;
+  state.detailPanel = new bootstrap.Offcanvas(element);
+  element.addEventListener("hidden.bs.offcanvas", () => {
+    if (state.disposed) return;
+    let target = state.detailReturnTarget || state.detailTrigger;
+    if (!target || !target.isConnected || !target.getClientRects().length) {
+      target = state.host.querySelector(`#nlb-list-panel-${state.uid}`);
+    }
+    if (target) target.focus({preventScroll:true});
+    state.detailReturnTarget = null;
+  });
+}
+
+function openEmergencyDetails(state, recordKey, triggerElement) {
+  if (state.disposed) return;
+  const record = state.filteredRecords.find(row => row._key===recordKey);
+  if (!record) return;
+  ensureEmergencyDetailPanel(state);
+  state.selectedRecordKey = recordKey;
+  state.detailTrigger = triggerElement;
+  setText(state,`nlb-details-title-${state.uid}`,record.name);
+  state.host.querySelector(`#nlb-details-body-${state.uid}`).innerHTML = renderEmergencyDetails(record,state.uid);
+  state.host.querySelector('[data-nlb-action="show-on-map"]').disabled = !hasEmergencyCoordinates(record) || !state.map;
+  state.detailPanel.show();
+}
+
+function closeEmergencyDetails(state) {
+  state.selectedRecordKey = null;
+  if (state.detailPanel) state.detailPanel.hide();
+}
+
+function focusEmergencyRecord(state, recordKey) {
+  const record = state.filteredRecords.find(row => row._key===recordKey);
+  if (!record || !state.map || !hasEmergencyCoordinates(record)) return;
+  const panel = state.host.querySelector(`#nlb-map-panel-${state.uid}`);
+  const reveal = () => {
+    if (state.disposed || !state.map) return;
+    const marker = state.markersByKey.get(recordKey);
+    if (!marker) return;
+    panel.scrollIntoView({block:"start"}); panel.focus({preventScroll:true});
+    const open = () => {
+      if (state.disposed || !state.map || state.markersByKey.get(recordKey)!==marker) return;
+      marker.openPopup();
+      const icon = marker.getElement();
+      if (icon) {icon.classList.add("nlb-selected-marker");icon.focus({preventScroll:true});}
+    };
+    if (state.markerLayer.zoomToShowLayer) state.markerLayer.zoomToShowLayer(marker,open);
+    else {state.map.setView([record.lat,record.lon],16,{animate:false});open();}
+  };
+  if (state.detailElement && state.detailElement.classList.contains("show")) {
+    state.detailReturnTarget = panel;
+    state.detailElement.addEventListener("hidden.bs.offcanvas",reveal,{once:true});
+    state.detailPanel.hide();
+  } else reveal();
 }
 
 function statusClass(status) {
-  return `nlb-marker-${normalizeSearchText(status).replace(/\s+/g, "-")}`;
+  const classes = {
+    [NLB_STATUS.active]: "nlb-marker-aktiv",
+    [NLB_STATUS.restricted]: "nlb-marker-eingeschraenkt",
+    [NLB_STATUS.offline]: "nlb-marker-ausser-betrieb",
+    [NLB_STATUS.planned]: "nlb-marker-geplant",
+    [NLB_STATUS.unspecified]: "nlb-marker-stoerung",
+    [NLB_STATUS.unknown]: "nlb-marker-unbekannt",
+  };
+  return classes[normalizeEmergencyStatus(status)];
 }
 
 function statusBadgeClass(status) {
   if (status === NLB_STATUS.active) return "text-bg-success";
-  if (status === NLB_STATUS.restricted) return "text-bg-warning";
+  if ([NLB_STATUS.restricted, NLB_STATUS.unspecified].includes(status)) return "text-bg-warning";
   if (status === NLB_STATUS.offline) return "text-bg-danger";
   if (status === NLB_STATUS.planned) return "text-bg-primary";
   return "text-bg-secondary";
@@ -1526,22 +1474,25 @@ function showEmergencyAlert(state, message, type = "danger") {
 }
 
 function formatBoolean(value) {
-  return value ? "Ja" : "Nein";
+  return value == null ? "Unbekannt" : value ? "Ja" : "Nein";
 }
 
 function formatNumber(value) {
-  return Number(value || 0).toLocaleString("de-DE");
+  return value == null ? "Unbekannt" : Number(value).toLocaleString("de-DE");
 }
 
 function formatDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  if (!value) return "Unbekannt";
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!parts) return "Ungültiges Datum";
+  const date = new Date(0);
+  date.setFullYear(Number(parts[1]),Number(parts[2])-1,Number(parts[3]));
+  date.setHours(12,0,0,0);
   return date.toLocaleDateString("de-DE");
 }
 
 function normalizeSearchText(value) {
-  return String(value ?? "")
+  return emergencyText(value)
     .toLowerCase()
     .replace(/ä/g, "ae")
     .replace(/ö/g, "oe")
@@ -1564,7 +1515,49 @@ function escapeHtml(value) {
 
 function safeHttpUrl(value) {
   const s = String(value || "").trim();
-  return /^https?:\/\//i.test(s) ? s : "";
+  try {
+    const url = new URL(s);
+    return ["http:","https:"].includes(url.protocol) && url.hostname ? s : "";
+  } catch (_error) { return ""; }
+}
+
+function getEmergencySourceLinks(config = {}) {
+  const dataset = safeHttpUrl(config.urlDaten) || null;
+  const resource = safeHttpUrl(getOdasApiUrl(config,"standorte")) || null;
+  return {portal:dataset ? new URL(dataset).origin : null,dataset,resource};
+}
+
+function renderEmergencySourceLinks(config = {}) {
+  const links = getEmergencySourceLinks(config);
+  const labels = {portal:"Open Data Portal",dataset:"Datensatz",resource:"Ressource"};
+  const items = Object.entries(links).filter(([_key,url]) => url).map(([key,url]) =>
+    `<li><strong>${labels[key]}:</strong> <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(new URL(url).hostname)} – ${labels[key]} ansehen</a></li>`);
+  return items.length ? `<ul class="nlb-source-links">${items.join("")}</ul>` : "";
+}
+
+function renderPageOverride(page) {
+  if (page !== "beschreibung" || typeof configData === "undefined") return null;
+  const root = document.createElement("div");
+  const supplied = configData.beschreibung;
+  root.innerHTML = Array.isArray(supplied) ? supplied.filter(value => value !== "_multiline_").join("\n") : String(supplied || "");
+  const heading = [...root.querySelectorAll("h2")].find(element => element.textContent.trim().toLowerCase() === "datenquelle");
+  const links = renderEmergencySourceLinks(configData);
+  if (heading) {
+    // Nur die strukturierte Quellen-Linkliste ersetzen, redaktionelle Erläuterungen erhalten.
+    let next = heading.nextElementSibling;
+    while (next && next.tagName !== "H2") {
+      const following = next.nextElementSibling;
+      if (["UL","OL"].includes(next.tagName)) {
+        const labels = [...next.querySelectorAll("li > strong")].map(element => element.textContent.trim().toLowerCase());
+        if (labels.length && labels.every(label => /^(open data portal|datensatz|ressourcen?):?$/.test(label))) next.remove();
+      }
+      next = following;
+    }
+    if (links) heading.insertAdjacentHTML("afterend",links);
+  } else if (links) {
+    root.insertAdjacentHTML("beforeend","<h2>Datenquelle</h2>" + links);
+  }
+  return '<section class="nlb-description" aria-label="Über diese App"><h2>Über diese App</h2>' + root.innerHTML + "</section>";
 }
 
 function loadStyleOnce(id, href) {
@@ -1646,8 +1639,8 @@ function addToHead() {
 if (typeof window !== "undefined") {
   window.NotfallLagebild = {
     normalizeEmergencyRecord,
-    calculateEmergencyMetrics,
-    filterEmergencyRecords,
+    buildEmergencyView,
+    filterEmergencyAreaRecords,
     deriveEmergencyMapCenter,
   };
 }
@@ -1655,8 +1648,8 @@ if (typeof window !== "undefined") {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     normalizeEmergencyRecord,
-    calculateEmergencyMetrics,
-    filterEmergencyRecords,
+    buildEmergencyView,
+    filterEmergencyAreaRecords,
     deriveEmergencyMapCenter,
     deriveEmergencyDescription,
     parseEmergencyCsv,

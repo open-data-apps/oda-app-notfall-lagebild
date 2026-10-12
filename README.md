@@ -13,9 +13,9 @@ Die App ist eine Single Page Application mit:
 - Logo-Anzeige
 - Menü
 - Seiten für Impressum, Datenschutz, Beschreibung, Kontakt und Hauptinhalt
-- Kennzahlen für aktive, gestörte und überfällige Standorte
+- Kennzahlen mit ausdrücklich beschrifteten Standortaktionen, getrennten Kapazitäten und Prüfalter statt behaupteter Fristüberschreitung
 - Filter für Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Priorität und Freitextsuche
-- Interaktive Leaflet-Karte mit farbigen Status-Markern, Clustering, Popups, Typ-Legende und optionalem 1-km-Radius
+- Interaktive Leaflet-Karte mit Status-Markern, neutralen Standortgruppen, gemeinsamen Standortdetails, Popups, Typ-Legende und optionalem 1-km-Radius
 - Chart.js-Balkendiagramm "Standorte nach Typ"
 - Sortierbare, paginierte Standorttabelle
 
@@ -32,8 +32,12 @@ Diese App richtet sich an kommunale Verwaltungen, Bevölkerungsschutz und Krisen
 Die App unterstützt folgende Datenquellen:
 
 - **Paket-Standardquelle**: externe JSON-Demo-Ressource unter `https://open-data-musterstadt.ckan.de/.../download/notfall-lagebild-demo.json`
-- **JSON**: Array oder Objekt mit `records`, `results`, `data` oder direkten CKAN-`datastore_search`-Antworten
-- **CSV**: Komma- oder Semikolon-separierte Dateien mit Kopfzeile
+- **JSON**: vollständiges Array oder vollständige Listen in `records`, `results`, `data`, `result.records` oder `result.results`
+- **CSV**: vollständige Komma- oder Semikolon-Dateien mit Kopfzeile, einschließlich gequoteter mehrzeiliger Texte
+
+Direkte HTTP(S)-Ressourcen müssen keinen bestimmten CKAN-Downloadpfad besitzen. CKAN-Datastore-Endpunkte und erkennbare Teilantworten werden zurückgewiesen; die App lädt keine Folgeseiten. Eine gültige leere Liste ist kein Fehler, eine leere/unlesbare Antwort dagegen schon.
+
+Die Laufzeit toleriert einzelne ungültige Einträge mit sichtbarer Qualitätsmeldung. Mindestens Name/Bezeichnung oder Kennung muss einen Standort erkennen lassen. Das Schema beschreibt das empfohlene kanonische Austauschformat, keine vollständige Laufzeit-Schemavalidierung. Doppelte Kennungen werden gemeldet und nicht still zusammengeführt. Fehlende Angaben bleiben unbekannt, auch bei Status, Priorität, Ausstattung und Kapazität. Standorte ohne gültige Koordinaten bleiben in der Liste nutzbar.
 
 Der Datenabruf erfolgt standardmäßig direkt im Browser (`proxyAktiv: nein`). Bei `proxyAktiv: ja` nutzt die App im ODAS-Betrieb den ODAS-Proxy; lokale Tests verwenden den Direktabruf.
 
@@ -46,6 +50,8 @@ Der Paket-Default verweist auf die bekannte Demo-Ressource. Die dort dargestellt
 | `https://open-data-musterstadt.ckan.de/.../notfall-lagebild-demo.json` | Paket-Standardquelle (Demo, extern) |
 
 ### Kartenlegende und Radius
+
+Standortgruppen sind neutral eingefärbt; ihre Zahlen geben nur die Anzahl zusammengefasster Standorte an. Das Typdiagramm nutzt keine Statusfarben und kennzeichnet eine Begrenzung auf die zehn häufigsten Typen ausdrücklich. Bei Kartenausfall bleiben alle auswertbaren Standorte in der paginierten Liste und den Details verfügbar; es gibt keine unvollständige Ersatzkarte.
 
 Die Statusfarben zeigen den Status der Standorte; die Markerbuchstaben stehen für die in den Daten vorkommenden Standorttypen. Insbesondere kennzeichnet **N** eine Notfall-Anlaufstelle und **M** eine mobile Versorgungsstelle; beide sind damit nicht länger als „P“ zusammengefasst. Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite. Er ist standardmäßig ausgeschaltet.
 
@@ -61,7 +67,7 @@ Die App ist kompatibel mit tabellarischen Standortdatensätzen, die folgende Ker
 | `name` | Anzeigename |
 | `typ` | Hauptkategorie, z. B. Notunterkunft oder Sirenenstandort |
 | `untertyp` | Feinerer Typ |
-| `status` | `aktiv`, `eingeschränkt`, `außer Betrieb` oder `geplant` |
+| `status` | `aktiv`, `eingeschränkt`, `außer Betrieb`, `geplant`, `gestört` (Ausmaß unbekannt) oder unbekannt |
 | `kapazitaet_max` | Gesamtkapazität |
 | `kapazitaet_verfuegbar` | Freie Kapazität |
 | `stadtteil` | Stadtteil oder Bezirk |
@@ -78,6 +84,26 @@ Die App ist kompatibel mit tabellarischen Standortdatensätzen, die folgende Ker
 Das vollständige Schema liegt in `assets/schema.json`.
 
 ---
+
+## Standortdetails und Bedienung
+
+Die beschriftete Namensaktion in der Liste und ein Kartenmarker öffnen dieselben vollständigen Standortdetails. Dort stehen auch Adresse, veröffentlichte Ansprechstelle, Ausstattung und der ungekürzte Hinweis. „Auf Karte zeigen“ macht Marker und Popup sichtbar; ohne gültige Koordinaten bleibt die textuelle Detailansicht nutzbar. Schließen führt den Tastaturfokus zum Auslöser zurück, sofern dieser noch vorhanden ist. Sortieren verändert nicht die Kartenkamera.
+
+Mobil bleiben Suche, Typ, Status und Stadtteil direkt erreichbar. Weitere Filter sind aufklappbar; aktive zusätzliche Filter werden sichtbar zusammengefasst. Direkte Sprünge führen zu Karte und Standortliste.
+
+## Kennzahlen und Filter
+
+Kennzahlen beschreiben den gewählten Datenbereich vor der Status-/Schnellauswahl. Karte, Diagramm und Liste zeigen danach dieselbe Treffermenge; die Karte nennt deren kartierbaren Anteil. Die Stadtteilkennzahl verwendet unabhängig davon den gesamten geladenen Bestand (gegebenenfalls nur den gewählten Stadtteil): Sie zählt Stadtteile ohne gemeldeten aktiven Standort, nicht tatsächliche Versorgungslücken. Nicht in der Quelle enthaltene Stadtteile können nicht bewertet werden.
+
+Kapazitäten werden nach Standorttyp und Betriebsstatus getrennt. Nur gemeldete freie Plätze aktiver Standorte bilden den Hauptwert. Ein unspezifisches „gestört“ behauptet weder eingeschränkte Nutzbarkeit noch vollständigen Ausfall. Ohne Typ ist die Vergleichbarkeit unbekannt. Fehlende Werte sind keine Nullmessung.
+
+Das Prüfalter bezeichnet **mehr als 180 Kalendertage**, keine gesetzliche oder individuell konfigurierte Frist. Fehlende, ungültige oder zukünftige Prüfdaten bleiben als Qualitätsmangel erkennbar. Das jüngste Standortprüfdatum ist kein Aktualisierungsdatum der ganzen Quelle.
+
+## Daten neu laden
+
+„Daten neu laden“ ruft dieselbe konfigurierte vollständige Ressource erneut ab. Währenddessen bleibt der letzte erfolgreiche Bestand ausdrücklich als solcher sichtbar. Bei einem Fehler werden weder die Daten noch deren Erfolgszeit durch vermeintliche Nullwerte ersetzt; die Fehlermeldung bleibt sichtbar. Eine gültige leere Liste ersetzt dagegen den alten Bestand. Filter werden erhalten, soweit ihre Werte in der neuen Quelle weiterhin vorhanden sind; entfallene Auswahlwerte werden benannt. Es gibt keine automatische Aktualisierung.
+
+„Letzter erfolgreicher Abruf“ ist nur die Abrufzeit. „Jüngste Standortprüfung“ bezeichnet eine Einzelprüfung, und ein konfigurierter `datenStand` erscheint getrennt als manuelle Quellenangabe. Keine dieser Angaben garantiert die Aktualität aller Standorte.
 
 ## Konfiguration
 
@@ -165,7 +191,10 @@ ausgeliefert.
 
 Beim Aufruf dieser App werden folgende externe Server kontaktiert:
 
-- `tile.openstreetmap.org` — Kartenkacheln (OpenStreetMap)
+- Die konfigurierte Standortquelle — bei `proxyAktiv: nein` direkt durch den Browser; bei `ja` erfolgt der Quellenabruf durch den ODAS-Server. Dessen serverseitige Übermittlung/Protokollierung richtet sich nach dem eingesetzten ODAS-System.
+- `tile.openstreetmap.org` einschließlich Subdomains — Kartenkacheln (OpenStreetMap), direkt durch den Browser.
+
+Der Instanzbetreiber muss die Veröffentlichung seiner Quelle prüfen. Insbesondere Ansprechstellen können personenbezogene Daten enthalten; die App garantiert keine Personenfreiheit. Portal-, Datensatz- und Ressourcenlinks werden aus der tatsächlichen Konfiguration erzeugt, fehlende Ebenen weggelassen. Bei bereits gebuchten Instanzen müssen redaktionelle Bestandskonfigurationen gesondert geprüft werden; Paket-Defaults sind keine automatische Live-Migration.
 
 Diese Anbieter bleiben auch im Standalone-Betrieb extern; ein vollständig autarker Betrieb ohne Internetzugang ist derzeit nicht möglich. Alle Programmbibliotheken werden lokal aus `app/vendor/` ausgeliefert und nicht mehr extern geladen.
 
@@ -179,6 +208,11 @@ Diese Anbieter bleiben auch im Standalone-Betrieb extern; ein vollständig autar
 
 ```bash
 node --test tests/*.test.cjs
+
+# Separat: Browserfälle gegen Live Server, vorhandenes Playwright verwenden
+NLB_BASE_URL=http://127.0.0.1:5501/app/ \
+NLB_PLAYWRIGHT_MODULE=/pfad/zum/installierten/playwright \
+node --test tests/browser-regression.cjs
 ```
 
 Die Tests prüfen die tatsächlichen Render- und Normalisierungsfunktionen der App: Erkennung der bekannten Demoquelle einschließlich URL-Parametern, keine Demo-Kennzeichnung anderer Quellen, eigenständiger Demo-Hinweis, unterschiedliche N/M-Symbole, maskierte Typnamen in der Legende und die Erklärung des Radius. Es werden keine zusätzlichen Test-Abhängigkeiten benötigt.

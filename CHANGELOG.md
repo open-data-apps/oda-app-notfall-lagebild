@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.29.0 - 2026-10-12
+- SEC: Statuswerte können keinen ausführbaren HTML-Inhalt mehr in Kartenmarker einschleusen; feste Status- und Klassenzuordnung.
+- FIX: Kennzahlenbasis von der Ergebnis-Schnellauswahl getrennt; stabile Stadtteil-Bestandszahl statt behaupteter Unterversorgung, Kapazitäten nach Typ und Betriebsstatus.
+- FIX: Unbekannte Angaben bleiben unbekannt; vollständige Ressourcen, fehlerhafte Einzelzeilen, Koordinaten und Kalenderdaten werden differenziert geprüft.
+- ENH: Ausdrückliche Kachelaktionen, kompakte mobile Filter, gemeinsame vollständige Standortdetails und nachvollziehbare Tastaturführung.
+- FIX: Standortdetails unterscheiden fehlende Angaben („Nicht angegeben“) von ungültigen („Unbekannt“); echte Nullwerte und Nein-Angaben bleiben erhalten.
+- ENH: Manueller Neuabruf mit getrennter Erfolgszeit und ehrlichem Fehler-/Altbestandszustand; Schutz vor verspäteten Antworten und Listenern verlassener Instanzen.
+- FIX: Neutrale Standortgruppen/Typdiagramme, keine unvollständige SVG-Ersatzkarte; Quelle und Beschreibungslinks folgen der tatsächlichen Konfiguration.
+- DOC: Methodik, Datenschutz, Schema und lokale Konfiguration abgestimmt; keine zusätzlichen Instanzfelder oder Template-/Vendor-Änderungen.
+- TEST: Reproduzierende Funktions- und Browserprüfungen für Sicherheit, Datenqualität, Filter, Details, mobile Bedienung und Neuabruf ergänzt.
+
+## 1.28.8 - 2026-10-08
+- FIX: F-112: Unbekannte Antwortstrukturen als Formatfehler statt als leere Daten anzeigen; bekannte leere Listen bleiben gültig.
+
 ## 1.28.7 - 2026-10-08
 - FIX: Bekannte Demoquelle wird in der Startansicht deutlich als Anschauungsbeispiel ohne reale Einsatzdaten gekennzeichnet; der Hinweis bleibt bei Filterung sichtbar.
 - FIX: Eigene Markersymbole N für Notfall-Anlaufstellen und M für mobile Versorgungsstellen; zusätzliche Typ-Legende erklärt die tatsächlich vorkommenden Standortarten.

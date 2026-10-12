@@ -3,49 +3,53 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "app-version": "1.28.7",
+  "app-version": "1.29.0",
   "app-package-version": "2",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
   "kurzbeschreibung": "Übersicht für kommunale Notfall-Infrastruktur mit Status, Kapazitäten und räumlicher Einordnung.",
   "beschreibung": [
     "_multiline_",
-    "Das Notfall-Lagebild visualisiert konfigurierte Standortdaten zur kommunalen Notfall-Infrastruktur mit Status, Kapazitäten und Prüfdaten.",
+    "Das Notfall-Lagebild zeigt konfigurierte Standortdaten kommunaler Notfall-Infrastruktur mit gemeldetem Status, Kapazitäten, Prüfalter, Karte und vollständigen Standortdetails.",
     "",
-    "Die App lädt Standortdaten aus einer konfigurierten JSON- oder CSV-Quelle und stellt sie über Kennzahlen, Karte, Diagramm und Filter dar. Sie unterstützt die Orientierung, ersetzt aber keine amtliche Einsatz- oder Krisenentscheidung.",
-    "",
-    "Für kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie interessierte Bürgerinnen und Bürger. Besondere Datenkenntnisse sind nicht erforderlich.",
-    "",
-    "Der Paket-Default verweist auf die bekannte Demo-Ressource: Die dort dargestellten Standorte und Kapazitäten sind Anschauungsbeispiele, keine realen Einsatzdaten und keine Notfallentscheidungsgrundlage. Die Startansicht kennzeichnet nur diese bekannte URL; andere Quellen werden nicht pauschal als Demo eingeordnet.",
+    "Für wen ist diese App? Für kommunale Verwaltungen, Bevölkerungsschutz sowie interessierte Bürgerinnen und Bürger. Besondere Datenkenntnisse sind nicht erforderlich. Die Übersicht ersetzt keine amtliche Einsatz- oder Krisenentscheidung.",
     "",
     "## Methodik",
     "",
-    "Die App ruft die konfigurierte Datenquelle (`apiurls.standorte`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+    "Die App lädt vollständige JSON-/CSV-Ressourcen direkt oder über den ODAS-Proxy, ohne API-Pagination. Unbrauchbare Einzelzeilen werden gezählt; fehlende Angaben bleiben unbekannt statt Nein, Null oder Geplant.",
     "",
-    "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
+    "Kennzahlen gelten für den gewählten Datenbereich ohne Status-/Schnellauswahl. Beschriftete Kachelaktionen zeigen passende Standorte; eine Schnellauswahl ersetzt die vorherige, während Suche und Bereichsfilter erhalten bleiben. Karte, Diagramm und Liste verwenden dieselben Treffer; die Karte nennt den kartierbaren Anteil.",
     "",
-    "Aus den gelieferten Attributen berechnet die App Status-, Kapazitäts- und Überfälligkeits-Kennzahlen – aktive und gestörte Standorte, freie Gesamtkapazität, unterversorgte Stadtteile (Mindestanzahl aktiver Standorte je Stadtteil) und überfällige Prüfungen (Grenzwert in Tagen). Karte, Diagramm und sortierbare, paginierte Tabelle werden daraus gespeist; welche Attribute tatsächlich vorhanden sind, hängt von der Quelle ab.",
+    "Die Zahl der Stadtteile ohne aktiven Standort nutzt den gesamten geladenen Bestand bzw. den gewählten Stadtteil, unabhängig von anderen Filtern. Nur in der Quelle vorhandene Stadtteile werden erfasst; dies ist kein Nachweis realer Unterversorgung.",
     "",
-    "Die Statusfarben zeigen den Status der Standorte; die Buchstaben in der Legende stehen für die in den Daten vorkommenden Standorttypen.",
-    "Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite.",
+    "Gemeldete freie Plätze aktiver Standorte bleiben nach Typ getrennt. Eingeschränkte und geplante Kapazität stehen separat. Unspezifische Störungen belegen keine Nutzbarkeit; unbekannte Angaben sind keine Nullmessung. Es gibt keine ungeprüfte typenübergreifende Gesamtsumme.",
+    "",
+    "Prüfalter bedeutet mehr als 180 Kalendertage, keine verbindliche Prüffrist. Fehlende, ungültige und zukünftige Prüfdaten bleiben sichtbar. Jüngste Standortprüfung, manuelle Quellenangabe und letzter erfolgreicher Abruf werden getrennt bezeichnet. Daten neu laden ist eine manuelle Aktion; bei Fehlern bleibt der vorige Bestand nur ausdrücklich als alter Stand sichtbar.",
+    "",
+    "Statusfarben gelten für Einzelstandorte; Gruppen und Typdiagramm sind neutral. Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite. Liste und Karte öffnen dieselben Details. Auf Karte zeigen macht Marker und Popup sichtbar; ohne Kartenposition bleiben die Details nutzbar.",
     "",
     "## Datenquelle",
     "",
-    "Die Daten werden aus einer konfigurierten JSON- oder CSV-Ressource mit Standort- und Lageinformationen bereitgestellt.",
+    "Die tatsächliche Herkunft folgt den konfigurierten Adressen. In der App werden passende Links auf Portal, Datensatz und Ressource erzeugt; fehlende Angaben werden weggelassen.",
     "",
-    "- **Open Data Portal:** [Open Data Musterstadt](https://open-data-musterstadt.ckan.de)",
-    "- **Datensatz:** [Notfall-Lagebild-Datensatz]({{{appinstanz.urlDaten}}})",
-    "- **Ressource:** [JSON-Demoressource]({{{appinstanz.apiurls.1}}})",
+    "- **Open Data Portal:** wird in der App aus der konfigurierten Datensatzadresse abgeleitet.",
     "",
-    "Angezeigt werden die in der Quelle vorhandenen Standorte; Vollständigkeit und Aktualität hängen vom Pflegestand der Quelle ab.",
+    "- **Datensatz:** [Datensatz ansehen]({{{appinstanz.urlDaten}}})",
+    "",
+    "- **Ressource:** [Ressource ansehen]({{{appinstanz.apiurls.1}}})",
+    "",
+    "Vollständigkeit, fachliche Richtigkeit und Aktualität hängen von der Quelle ab. Der Paket-Default nutzt eine gekennzeichnete Demoressource: Anschauungsbeispiele, keine realen Einsatzdaten und keine Notfallentscheidungsgrundlage.",
     "",
     "## Open Data App",
     "",
-    "Diese App ist eine Open Data App und kann im [Open Data App Store](https://open-data-app-store.de/) betrieben werden. Sie ist Open Source und lässt sich mit kommunalen Notfall-, Standort- oder Lagebilddaten betreiben.",
+    "Diese Open-Source-App kann im Open Data App Store mit geeigneten kommunalen Standortdaten betrieben werden.",
     "",
-    "- [Open Data App Store](https://open-data-app-store.de/) – die Plattform für Open Data Apps",
-    "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps) – die Organisation mit allen Apps",
-    "- [oda-app-notfall-lagebild](https://github.com/open-data-apps/oda-app-notfall-lagebild) – das Repository dieser App"
+    "- [Open Data App Store](https://open-data-app-store.de/)",
+    "",
+    "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps)",
+    "",
+    "- [Repository dieser App](https://github.com/open-data-apps/oda-app-notfall-lagebild)",
+    ""
   ],
   "tags-funktion": [
     "Karte",
@@ -69,9 +73,9 @@
     "assets/Mobile_Screenshot.png"
   ],
   "daten": {
-    "beschreibung": "Tabellarischer Standortdatensatz für kommunale Notfall-Infrastruktur mit Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung und Prüfdatum.",
+    "beschreibung": "Vollständige Standortressource als JSON-Liste oder CSV mit Kopfzeile. Status, Kapazitäten, Ausstattung und Prüfdatum können unbekannt sein. Nur geeignete veröffentlichbare Daten bereitstellen; keine automatische API-Pagination.",
     "schema": "assets/schema.json",
-    "beispiel": "Direkter JSON- oder CSV-Datenendpunkt für das kommunale Notfall-Lagebild.",
+    "beispiel": "JSON-Array oder vollständige Liste in records/results/data bzw. result.records/result.results; alternativ CSV mit Name oder Kennung. Keine erkennbar abgeschnittene API-Antwort.",
     "beispiel-url": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json"
   },
   "branding-css": "",
@@ -136,42 +140,46 @@
       },
       "default": [
         "_multiline_",
-        "Das Notfall-Lagebild visualisiert konfigurierte Standortdaten zur kommunalen Notfall-Infrastruktur mit Status, Kapazitäten und Prüfdaten.",
+        "Das Notfall-Lagebild zeigt konfigurierte Standortdaten kommunaler Notfall-Infrastruktur mit gemeldetem Status, Kapazitäten, Prüfalter, Karte und vollständigen Standortdetails.",
         "",
-        "Die App lädt Standortdaten aus einer konfigurierten JSON- oder CSV-Quelle und stellt sie über Kennzahlen, Karte, Diagramm und Filter dar. Sie unterstützt die Orientierung, ersetzt aber keine amtliche Einsatz- oder Krisenentscheidung.",
-        "",
-        "Für kommunale Verwaltungen, Bevölkerungsschutz und Krisenstäbe sowie interessierte Bürgerinnen und Bürger. Besondere Datenkenntnisse sind nicht erforderlich.",
-        "",
-        "Der Paket-Default verweist auf die bekannte Demo-Ressource: Die dort dargestellten Standorte und Kapazitäten sind Anschauungsbeispiele, keine realen Einsatzdaten und keine Notfallentscheidungsgrundlage. Die Startansicht kennzeichnet nur diese bekannte URL; andere Quellen werden nicht pauschal als Demo eingeordnet.",
+        "Für wen ist diese App? Für kommunale Verwaltungen, Bevölkerungsschutz sowie interessierte Bürgerinnen und Bürger. Besondere Datenkenntnisse sind nicht erforderlich. Die Übersicht ersetzt keine amtliche Einsatz- oder Krisenentscheidung.",
         "",
         "## Methodik",
         "",
-        "Die App ruft die konfigurierte Datenquelle (`apiurls.standorte`) direkt ab – im Live-Betrieb optional über den ODAS-Proxy – und erkennt das Format automatisch: JSON wird direkt geparst, CSV über PapaParse.",
+        "Die App lädt vollständige JSON-/CSV-Ressourcen direkt oder über den ODAS-Proxy, ohne API-Pagination. Unbrauchbare Einzelzeilen werden gezählt; fehlende Angaben bleiben unbekannt statt Nein, Null oder Geplant.",
         "",
-        "Datensätze werden im Browser normalisiert (Typ, Status, Kapazität, Adresse, Stadtteil, Koordinaten, Betreiber, Ausstattung, Prüfdatum) und clientseitig gefiltert (Typ, Untertyp, Status, Stadtteil, Betreiber, Barrierefreiheit, Notstrom, Freitextsuche, Schnellfilter).",
+        "Kennzahlen gelten für den gewählten Datenbereich ohne Status-/Schnellauswahl. Beschriftete Kachelaktionen zeigen passende Standorte; eine Schnellauswahl ersetzt die vorherige, während Suche und Bereichsfilter erhalten bleiben. Karte, Diagramm und Liste verwenden dieselben Treffer; die Karte nennt den kartierbaren Anteil.",
         "",
-        "Aus den gelieferten Attributen berechnet die App Status-, Kapazitäts- und Überfälligkeits-Kennzahlen – aktive und gestörte Standorte, freie Gesamtkapazität, unterversorgte Stadtteile (Mindestanzahl aktiver Standorte je Stadtteil) und überfällige Prüfungen (Grenzwert in Tagen). Karte, Diagramm und sortierbare, paginierte Tabelle werden daraus gespeist; welche Attribute tatsächlich vorhanden sind, hängt von der Quelle ab.",
+        "Die Zahl der Stadtteile ohne aktiven Standort nutzt den gesamten geladenen Bestand bzw. den gewählten Stadtteil, unabhängig von anderen Filtern. Nur in der Quelle vorhandene Stadtteile werden erfasst; dies ist kein Nachweis realer Unterversorgung.",
         "",
-        "Die Statusfarben zeigen den Status der Standorte; die Buchstaben in der Legende stehen für die in den Daten vorkommenden Standorttypen.",
-        "Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite.",
+        "Gemeldete freie Plätze aktiver Standorte bleiben nach Typ getrennt. Eingeschränkte und geplante Kapazität stehen separat. Unspezifische Störungen belegen keine Nutzbarkeit; unbekannte Angaben sind keine Nullmessung. Es gibt keine ungeprüfte typenübergreifende Gesamtsumme.",
+        "",
+        "Prüfalter bedeutet mehr als 180 Kalendertage, keine verbindliche Prüffrist. Fehlende, ungültige und zukünftige Prüfdaten bleiben sichtbar. Jüngste Standortprüfung, manuelle Quellenangabe und letzter erfolgreicher Abruf werden getrennt bezeichnet. Daten neu laden ist eine manuelle Aktion; bei Fehlern bleibt der vorige Bestand nur ausdrücklich als alter Stand sichtbar.",
+        "",
+        "Statusfarben gelten für Einzelstandorte; Gruppen und Typdiagramm sind neutral. Der optionale Radius umfasst 1 km um jeden gefilterten Standort und ist keine geprüfte Versorgungsreichweite. Liste und Karte öffnen dieselben Details. Auf Karte zeigen macht Marker und Popup sichtbar; ohne Kartenposition bleiben die Details nutzbar.",
         "",
         "## Datenquelle",
         "",
-        "Die Daten werden aus einer konfigurierten JSON- oder CSV-Ressource mit Standort- und Lageinformationen bereitgestellt.",
+        "Die tatsächliche Herkunft folgt den konfigurierten Adressen. In der App werden passende Links auf Portal, Datensatz und Ressource erzeugt; fehlende Angaben werden weggelassen.",
         "",
-        "- **Open Data Portal:** [Open Data Musterstadt](https://open-data-musterstadt.ckan.de)",
-        "- **Datensatz:** [Notfall-Lagebild-Datensatz]({{{appinstanz.urlDaten}}})",
-        "- **Ressource:** [JSON-Demoressource]({{{appinstanz.apiurls.1}}})",
+        "- **Open Data Portal:** wird in der App aus der konfigurierten Datensatzadresse abgeleitet.",
         "",
-        "Angezeigt werden die in der Quelle vorhandenen Standorte; Vollständigkeit und Aktualität hängen vom Pflegestand der Quelle ab.",
+        "- **Datensatz:** [Datensatz ansehen]({{{appinstanz.urlDaten}}})",
+        "",
+        "- **Ressource:** [Ressource ansehen]({{{appinstanz.apiurls.1}}})",
+        "",
+        "Vollständigkeit, fachliche Richtigkeit und Aktualität hängen von der Quelle ab. Der Paket-Default nutzt eine gekennzeichnete Demoressource: Anschauungsbeispiele, keine realen Einsatzdaten und keine Notfallentscheidungsgrundlage.",
         "",
         "## Open Data App",
         "",
-        "Diese App ist eine Open Data App und kann im [Open Data App Store](https://open-data-app-store.de/) betrieben werden. Sie ist Open Source und lässt sich mit kommunalen Notfall-, Standort- oder Lagebilddaten betreiben.",
+        "Diese Open-Source-App kann im Open Data App Store mit geeigneten kommunalen Standortdaten betrieben werden.",
         "",
-        "- [Open Data App Store](https://open-data-app-store.de/) – die Plattform für Open Data Apps",
-        "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps) – die Organisation mit allen Apps",
-        "- [oda-app-notfall-lagebild](https://github.com/open-data-apps/oda-app-notfall-lagebild) – das Repository dieser App"
+        "- [Open Data App Store](https://open-data-app-store.de/)",
+        "",
+        "- [Alle Open Data Apps auf GitHub](https://github.com/open-data-apps)",
+        "",
+        "- [Repository dieser App](https://github.com/open-data-apps/oda-app-notfall-lagebild)",
+        ""
       ],
       "erforderlich": "ja"
     },
@@ -205,17 +213,19 @@
       },
       "default": [
         "_multiline_",
-        "Die App verarbeitet ausschließlich offene Standortdaten oder Demo-Daten ohne personenbezogene Detaildaten.",
+        "Die verarbeiteten Angaben hängen von der konfigurierten Datenquelle ab. Veröffentlichte Ansprechstellen können personenbezogene Daten enthalten. Der Instanzbetreiber muss die Eignung und Zulässigkeit seiner Quelle vor Veröffentlichung prüfen; die App garantiert keine Personenfreiheit.",
         "",
-        "Alle für die Darstellung benötigten Programmbibliotheken werden mit der App ausgeliefert. Beim Aufruf werden dafür keine externen Server kontaktiert.",
+        "Alle Programmbibliotheken werden mit der App ausgeliefert. Dafür werden keine externen Bibliotheksserver kontaktiert.",
         "",
-        "Die angezeigten Daten werden vom Browser direkt aus der konfigurierten Datenquelle geladen. Dabei werden technisch bedingt IP-Adresse und Browserkennung an deren Betreiber übermittelt. Maßgeblich ist der Schalter `proxyAktiv` der Instanz-Konfiguration.",
+        "## Datenabruf",
         "",
-        "## Beim Aufruf kontaktierte Drittanbieter",
+        "Bei `proxyAktiv: nein` lädt der Browser die konfigurierte Ressource direkt beim Datenanbieter. Dabei erhält dessen Server technisch bedingt IP-Adresse und Browserkennung.",
         "",
-        "Folgende externe Server werden kontaktiert. Dabei werden IP-Adresse und User-Agent der Besucher:innen an diese Anbieter übertragen:",
+        "Bei `proxyAktiv: ja` kontaktiert der Browser den ODAS-Server, der den Quellenabruf übernimmt. Das serverseitige Übermittlungs- und Protokollierungsverhalten richtet sich nach dem eingesetzten ODAS-System; die App trifft darüber keine zusätzliche Zusicherung.",
         "",
-        "- **tile.openstreetmap.org** — Kartenkacheln (OpenStreetMap)"
+        "## Kartenkacheln",
+        "",
+        "Der Browser lädt Kartenkacheln von `tile.openstreetmap.org` einschließlich seiner Subdomains (OpenStreetMap). Dabei werden IP-Adresse und Browserkennung an diesen Anbieter übermittelt. Externe Links werden durch die jeweilige Nutzeraktion geöffnet."
       ],
       "erforderlich": "ja"
     },
@@ -258,7 +268,7 @@
     "apiurls": {
       "label": "URLs zu Datenressourcen",
       "category": "datenherkunft",
-      "hilfe": "Diese App benötigt einen direkten Datei-Download (JSON oder CSV), keinen API-Link mit resource_id. Der Paket-Default ist die bekannte Demo-JSON-Ressource; deren Standort- und Kapazitätsangaben sind Anschauungsbeispiele.",
+      "hilfe": "Diese App benötigt einen vollständigen Datei-Download als HTTP(S)-JSON-/CSV-Ressource mit Standortdaten, ohne vorgeschriebenen CKAN-Downloadpfad. Keine CKAN-Datastore-Endpunkte oder erkennbaren Teilantworten. Der Paket-Default ist eine gekennzeichnete Demoressource, keine reale Einsatzdatenquelle.",
       "typ": "array",
       "format": {
         "typ": "url",
@@ -267,7 +277,7 @@
       "urls": [
         {
           "name": "standorte",
-          "label": "Datei-Download – Standorte (CSV)",
+          "label": "Vollständige Standortdaten (JSON/CSV)",
           "default": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
           "beispiel": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c/resource/9e9de778-799b-4997-99b2-83eb703f2fc7/download/notfall-lagebild-demo.json",
           "erforderlich": "ja"
@@ -291,7 +301,7 @@
       "format": {
         "typ": "markdown"
       },
-      "default": "Die Standortdaten bilden die kommunale Notfall-Infrastruktur ab und werden aus der konfigurierten Datenquelle geladen. Jeder Standort enthält Status, Kapazitäten und das Datum der letzten Prüfung.\n\nDie Bewertung der Unterversorgung basiert auf der konfigurierbaren Mindestanzahl aktiver Standorte pro Stadtteil. Die Prüfungs-Frist wird über den konfigurierbaren Grenzwert für überfällige Prüfungen ermittelt.",
+      "default": "Ausgewertet werden die gelieferten Standortdaten, keine amtliche Echtzeitlage. Unvollständige und ungültige Angaben werden sichtbar gekennzeichnet.\n\nKennzahlen beziehen sich auf den gewählten Datenbereich ohne Status-/Schnellauswahl. Die Stadtteilzahl nutzt den gesamten Bestand bzw. den gewählten Stadtteil. Gemeldete Kapazitäten bleiben nach Typ und Betriebsstatus getrennt.\n\nPrüfalter bedeutet mehr als 180 Kalendertage, keine verbindliche Prüffrist. Eine jüngste Standortprüfung ist kein Aktualisierungsdatum der ganzen Quelle.",
       "erforderlich": "nein"
     },
     "datenStand": {
@@ -311,7 +321,7 @@
       "format": {
         "typ": "string"
       },
-      "default": "Standorte mit Status 'aktiv' im Datenbestand.",
+      "default": "Standorte mit gemeldetem Status aktiv im gewählten Datenbereich, vor der Status-/Schnellauswahl.",
       "erforderlich": "nein"
     },
     "kpiKontext2": {
@@ -321,37 +331,37 @@
       "format": {
         "typ": "string"
       },
-      "default": "Standorte mit Status 'eingeschränkt' oder 'außer Betrieb'.",
+      "default": "Standorte mit Status eingeschränkt, außer Betrieb oder Störung mit unbekanntem Ausmaß im gewählten Datenbereich.",
       "erforderlich": "nein"
     },
     "kpiKontext3": {
-      "label": "KPI-Erklärung: Freie Gesamtkapazität",
+      "label": "KPI-Erklärung: Gemeldete freie Plätze",
       "category": "beschreibung",
-      "hilfe": "Erklärt die KPI „: Freie Gesamtkapazität“ – Erklärungstext unter dem KPI-Wert. Leer lassen blendet den Hinweis unter der KPI aus.",
+      "hilfe": "Erklärt die KPI „Gemeldete freie Plätze“: aktive Standorte, getrennt nach Typ; eingeschränkte und geplante Plätze separat. Erklärung im aufklappbaren Hinweis; leer lassen blendet ihn aus.",
       "format": {
         "typ": "string"
       },
-      "default": "Summe aller verfügbaren Plätze über alle Standorte.",
+      "default": "Gemeldete freie Plätze aktiver Standorte, getrennt nach Standorttyp. Eingeschränkte und geplante Kapazitäten stehen separat; unbekannte Werte sind keine Nullmessung.",
       "erforderlich": "nein"
     },
     "kpiKontext4": {
-      "label": "KPI-Erklärung: Unterversorgte Stadtteile",
+      "label": "KPI-Erklärung: Stadtteile ohne aktiven Standort",
       "category": "beschreibung",
-      "hilfe": "Erklärt die KPI „: Unterversorgte Stadtteile“ – Erklärungstext unter dem KPI-Wert. Leer lassen blendet den Hinweis unter der KPI aus.",
+      "hilfe": "Erklärt die KPI „Stadtteile ohne aktiven Standort“: gesamter Bestand oder gewählter Stadtteil, unabhängig von anderen Filtern; kein Nachweis realer Unterversorgung. Erklärung im aufklappbaren Hinweis; leer lassen blendet ihn aus.",
       "format": {
         "typ": "string"
       },
-      "default": "Stadtteile, deren aktive Standorte die Mindestschwelle unterschreiten.",
+      "default": "Stadtteile ohne gemeldeten aktiven Standort im gesamten geladenen Bestand bzw. gewählten Stadtteil. Andere Filter ändern diese Einordnung nicht. Nur in der Quelle vorhandene Stadtteile sind erfasst; dies ist kein Nachweis realer Unterversorgung.",
       "erforderlich": "nein"
     },
     "kpiKontext5": {
-      "label": "KPI-Erklärung: Prüfungen überfällig",
+      "label": "KPI-Erklärung: Letzte Prüfung vor mehr als 180 Tagen",
       "category": "beschreibung",
-      "hilfe": "Erklärt die KPI „: Prüfungen überfällig“ – Erklärungstext unter dem KPI-Wert. Leer lassen blendet den Hinweis unter der KPI aus.",
+      "hilfe": "Erklärt die KPI „Letzte Prüfung vor mehr als 180 Tagen“. Keine verbindliche Prüffrist; unbekannte Prüfdaten werden separat gezählt. Erklärung im aufklappbaren Hinweis; leer lassen blendet ihn aus.",
       "format": {
         "typ": "string"
       },
-      "default": "Standorte, deren letzte Prüfung länger als der Grenzwert zurückliegt.",
+      "default": "Standorte, deren gültiges Prüfdatum mehr als 180 Kalendertage zurückliegt. Keine verbindliche Prüffrist. Fehlende oder ungültige Prüfdaten werden separat ausgewiesen.",
       "erforderlich": "nein"
     },
     "sprache": {

@@ -46,7 +46,9 @@
           "aktiv",
           "eingeschränkt",
           "außer Betrieb",
-          "geplant"
+          "geplant",
+          "gestört",
+          "unbekannt"
         ]
       },
       "description": "Betriebsstatus, z. B. aktiv."
@@ -55,13 +57,15 @@
       "name": "kapazitaet_max",
       "title": "Gesamtkapazität",
       "type": "integer",
-      "description": "Maximale Kapazität (Plätze)."
+      "description": "Gemeldete maximale Kapazität (Plätze), nichtnegative ganze Zahl; fehlend bedeutet unbekannt.",
+      "constraints": { "minimum": 0 }
     },
     {
       "name": "kapazitaet_verfuegbar",
       "title": "Freie Kapazität",
       "type": "integer",
-      "description": "Aktuell verfügbare Kapazität (Plätze)."
+      "description": "Gemeldete freie Plätze; nichtnegative ganze Zahl, nicht größer als bekannte Maximalkapazität. Nur innerhalb vergleichbarer Standorttypen und getrennt nach Status auswerten.",
+      "constraints": { "minimum": 0 }
     },
     {
       "name": "auslastung_prozent",
@@ -109,7 +113,7 @@
       "name": "barrierefrei",
       "title": "Barrierefrei",
       "type": "string",
-      "description": "Barrierefreiheit als „ja“/„nein“-Text (kein JSON-Boolean)."
+      "description": "Kanonisch ja/nein als Text; die App akzeptiert auch JSON-Booleans. Fehlend oder nicht interpretierbar bedeutet unbekannt."
     },
     {
       "name": "stromversorgung_notstrom",
@@ -146,7 +150,7 @@
       "title": "Letzte Prüfung",
       "type": "date",
       "format": "default",
-      "description": "Datum der letzten Prüfung (JJJJ-MM-TT)."
+      "description": "Gültiges Prüfdatum (JJJJ-MM-TT), nicht in der Zukunft; kein Aktualisierungsdatum der gesamten Quelle."
     },
     {
       "name": "prioritaet",
