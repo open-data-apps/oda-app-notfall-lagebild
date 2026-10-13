@@ -33,7 +33,7 @@ test("KPI editor labels and help match the implemented meanings",()=>{
  assert.match(fields.kpiKontext5.hilfe,/Keine verbindliche Prüffrist/);
 });
 test("release package and changelog identify the same updated delivery",()=>{
- assert.equal(pkg["app-version"],"1.29.0");
+ assert.equal(pkg["app-version"],"1.29.1");
  const top=fs.readFileSync(path.join(root,"CHANGELOG.md"),"utf8").match(/^## (\d+\.\d+\.\d+) - (\d{4}-\d{2}-\d{2})/m);
  assert.ok(top);assert.equal(top[1],pkg["app-version"]);
 });

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.1 - 2026-10-13
+- FIX: Portfolio-Standardfehleranzeige (`renderOdasFehler`) wiederhergestellt: "Keine Quelle konfiguriert" als Infohinweis mit Redaktionshinweis; erster Abruffehler mit eingeordneter Ursache, konfigurierter URL und Details im Hinweisfeld – "Daten neu laden" bleibt erreichbar.
+
 ## 1.29.0 - 2026-10-12
 - SEC: Statuswerte können keinen ausführbaren HTML-Inhalt mehr in Kartenmarker einschleusen; feste Status- und Klassenzuordnung.
 - FIX: Kennzahlenbasis von der Ergebnis-Schnellauswahl getrennt; stabile Stadtteil-Bestandszahl statt behaupteter Unterversorgung, Kapazitäten nach Typ und Betriebsstatus.
