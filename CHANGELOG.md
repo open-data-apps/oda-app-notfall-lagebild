@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.2 - 2026-10-13
+- FIX: Standard-Fehleranzeige gibt präzisere Tipps: ein „Failed to fetch“ ohne Proxy-Kontext erhält einen Netzwerk-Hinweis statt `proxyAktiv`; der 404-Hinweis gilt nur noch für echte HTTP-404-Antworten und nennt den lokal fehlenden Proxy/Relay statt pauschal „Datensatz auf dem Portal nicht gefunden“.
+
 ## 1.29.1 - 2026-10-13
 - FIX: Portfolio-Standardfehleranzeige (`renderOdasFehler`) wiederhergestellt: "Keine Quelle konfiguriert" als Infohinweis mit Redaktionshinweis; erster Abruffehler mit eingeordneter Ursache, konfigurierter URL und Details im Hinweisfeld – "Daten neu laden" bleibt erreichbar.
 
