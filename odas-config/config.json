@@ -37,12 +37,12 @@
   ],
   "datenschutz": [
     "<p>Die verarbeiteten Angaben hängen von der konfigurierten Datenquelle ab. Veröffentlichte Ansprechstellen können personenbezogene Daten enthalten. Der Instanzbetreiber muss die Eignung und Zulässigkeit seiner Quelle vor Veröffentlichung prüfen; die App garantiert keine Personenfreiheit.</p>",
-    "<p>Alle Programmbibliotheken werden mit der App ausgeliefert. Dafür werden keine externen Bibliotheksserver kontaktiert.</p>",
-    "<h2>Datenabruf</h2>",
-    "<p>Bei <code>proxyAktiv: nein</code> lädt der Browser die konfigurierte Ressource direkt beim Datenanbieter. Dabei erhält dessen Server technisch bedingt IP-Adresse und Browserkennung.</p>",
-    "<p>Bei <code>proxyAktiv: ja</code> kontaktiert der Browser den ODAS-Server, der den Quellenabruf übernimmt. Das serverseitige Übermittlungs- und Protokollierungsverhalten richtet sich nach dem eingesetzten ODAS-System; die App trifft darüber keine zusätzliche Zusicherung.</p>",
-    "<h2>Kartenkacheln</h2>",
-    "<p>Der Browser lädt Kartenkacheln von <code>tile.openstreetmap.org</code> einschließlich seiner Subdomains (OpenStreetMap). Dabei werden IP-Adresse und Browserkennung an diesen Anbieter übermittelt. Externe Links werden durch die jeweilige Nutzeraktion geöffnet.</p>"
+    "<p>Alle für die Darstellung benötigten Programmbibliotheken werden mit der App ausgeliefert. Beim Aufruf werden dafür keine externen Server kontaktiert.</p>",
+    "<p>Die angezeigten Daten werden vom Browser direkt aus der konfigurierten Datenquelle geladen. Dabei erhält deren Server technisch bedingt IP-Adresse und Browserkennung. Maßgeblich ist der Schalter <code>proxyAktiv</code> der Instanz-Konfiguration: Bei <code>proxyAktiv: ja</code> kontaktiert der Browser stattdessen den ODAS-Server, der den Quellenabruf übernimmt. Das serverseitige Übermittlungs- und Protokollierungsverhalten richtet sich nach dem eingesetzten ODAS-System; die App trifft darüber keine zusätzliche Zusicherung.</p>",
+    "<h2>Beim Aufruf kontaktierte Drittanbieter</h2>",
+    "<p>Folgende externe Server werden kontaktiert:</p>",
+    "<ul><li><strong>Die konfigurierte Standortquelle</strong> — bei <code>proxyAktiv: nein</code> direkt durch den Browser; bei <code>ja</code> erfolgt der Quellenabruf durch den ODAS-Server. Dessen serverseitige Übermittlung/Protokollierung richtet sich nach dem eingesetzten ODAS-System.</li><li><strong>tile.openstreetmap.org</strong> einschließlich Subdomains — Kartenkacheln (OpenStreetMap), direkt durch den Browser.</li></ul>",
+    "<p>Bei den direkten Abrufen werden IP-Adresse und Browserkennung an den jeweiligen Anbieter übermittelt. Externe Links werden durch die jeweilige Nutzeraktion geöffnet.</p>"
   ],
   "urlDaten": "https://open-data-musterstadt.ckan.de/dataset/d9a23cd8-1801-439a-a022-27535fc0499c",
   "fusszeile": [
