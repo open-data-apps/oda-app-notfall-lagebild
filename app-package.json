@@ -3,7 +3,7 @@
   "app-entwickler-name": "ondics-gmbh",
   "name-in-url": "notfall-lagebild-kommune",
   "name": "Notfall-Lagebild",
-  "app-version": "1.29.3",
+  "app-version": "1.29.4",
   "app-package-version": "2",
   "odas-app-icon": "assets/odas-app-icon.svg",
   "app-icon": "assets/odas-app-icon.svg",
@@ -70,7 +70,11 @@
   ],
   "screenshots": [
     "assets/Desktop_Screenshot.png",
-    "assets/Mobile_Screenshot.png"
+    "assets/Desktop_Screenshot_2.png",
+    "assets/Desktop_Screenshot_3.png",
+    "assets/Mobile_Screenshot.png",
+    "assets/Mobile_Screenshot_2.png",
+    "assets/Mobile_Screenshot_3.png"
   ],
   "daten": {
     "beschreibung": "Vollständige Standortressource als JSON-Liste oder CSV mit Kopfzeile. Status, Kapazitäten, Ausstattung und Prüfdatum können unbekannt sein. Nur geeignete veröffentlichbare Daten bereitstellen; keine automatische API-Pagination.",

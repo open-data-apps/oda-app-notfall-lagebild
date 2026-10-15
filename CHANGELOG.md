@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.4 - 2026-10-15
+- DOCS: Neue Store-Screenshots: je drei Desktop- (1440 × 1000) und Mobile-Aufnahmen (390 × 844) der aktuellen App, aufgenommen auf der Dev-Instanz. Bisherige Bilder nach `docs/screenshots/archive/2026-10-13/` verschoben. Keine Änderung an App-Code oder Konfiguration.
+
 ## 1.29.3 - 2026-10-14
 - DOCS: Datenschutzerklärung (Paket und lokale Config) auf den verbindlichen Portfolio-Wortlaut gebracht: Bibliotheken-Baustein, Datenabruf-Baustein (direkt aus der konfigurierten Datenquelle, Schalter `proxyAktiv`) und Liste der beim Aufruf kontaktierten Drittanbieter (Standortquelle, `tile.openstreetmap.org`). Keine Änderung an der App-Logik.
 
