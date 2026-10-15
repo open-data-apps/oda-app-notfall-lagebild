@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.6 - 2026-10-15
+- FIX: Nicht mehr benötigte Kopfzeilen-Regeln aus der App-CSS entfernt (Kopfzeile unverändert).
+
 ## 1.29.5 - 2026-10-15
 - FIX: Kopfzeile bei 360 px ohne Überlauf (Template): Logo- und Burger-Spalte passen sich der Breite an, das Menü-Symbol ragt nicht mehr über den rechten Rand. Keine Änderung an App-Code oder Konfiguration.
 

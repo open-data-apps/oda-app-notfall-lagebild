@@ -628,8 +628,6 @@
 }
 /* Die schmale Template-Menüspalte braucht auch auf kleinen Geräten ein echtes Touch-Ziel. */
 @media (max-width: 575px) {
-  #header .row > #logo-bootstrap { width: calc(100% - 68px); }
-  #header .row > .col-1 { width: 68px; }
   #header .row > .text-center { width: 100%; }
   #header .navbar-toggler { min-width: 44px; min-height: 44px; }
 }
