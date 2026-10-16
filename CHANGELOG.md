@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.7 - 2026-10-16
+- FIX: Schema: Status-Schreibweisen `eingeschraenkt` und `ausser Betrieb` der Quelle zugelassen (die App verarbeitet sie bereits); die Store-Datenprüfung meldete sonst Fehler.
+
 ## 1.29.6 - 2026-10-15
 - FIX: Nicht mehr benötigte Kopfzeilen-Regeln aus der App-CSS entfernt (Kopfzeile unverändert).
 
